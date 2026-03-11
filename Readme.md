@@ -1,4 +1,7 @@
-[//]: # (![AstrBot-Logo-Simplified]&#40;https://github.com/user-attachments/assets/ffd99b6b-3272-4682-beaa-6fe74250f7d9&#41;)
+<p align="center" width="100%">
+  <img width="128" height="128" alt="圆角-软件图标1 256" src="https://github.com/user-attachments/assets/d1de031e-ec9a-491c-a569-d4288d3727af" />
+</p>
+
 
 <div align="center">
 
