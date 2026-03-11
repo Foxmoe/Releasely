@@ -23,6 +23,7 @@ class ActivityController(private val activityMapper: ActivityRecordMapper) {
         return Result(200, "OK", activityMapper.selectByMap(map))
     }
 
+    @Suppress("NewApi")
     @PostMapping("/add")
     fun add(@RequestBody record: ActivityRecord): Result {
         record.createdAt = LocalDateTime.now()
