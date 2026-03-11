@@ -34,7 +34,7 @@ enum class SetupStep {
 }
 
 @Composable
-fun WelcomeScreen(onFinished: () -> Unit) {
+fun WelcomeScreen(onFinished: (name: String, gender: Gender, age: Int, hasPartner: Boolean) -> Unit) {
     var step by remember { mutableStateOf(SetupStep.Profile) }
     
     // Step 1: Profile
@@ -181,7 +181,7 @@ fun WelcomeScreen(onFinished: () -> Unit) {
                                     if (hasPartner == null) {
                                         isError = true
                                     } else {
-                                        onFinished()
+                                        onFinished(nickname, selectedGender, age, hasPartner!!)
                                     }
                                 },
                                 shape = RoundedCornerShape(12.dp),

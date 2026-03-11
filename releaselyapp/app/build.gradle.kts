@@ -1,6 +1,15 @@
 plugins {
     id("com.android.application")
     kotlin("android")
+    id("app.cash.sqldelight")
+}
+
+sqldelight {
+    databases {
+        create("AppDatabase") {
+            packageName.set("top.foxmoe.releasely.database")
+        }
+    }
 }
 
 android {
@@ -55,4 +64,7 @@ dependencies {
     implementation("androidx.compose.material3:material3")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
+
+    implementation("app.cash.sqldelight:android-driver:2.0.1")
+    implementation("app.cash.sqldelight:coroutines-extensions:2.0.1")
 }
