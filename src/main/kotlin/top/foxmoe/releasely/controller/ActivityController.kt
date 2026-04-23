@@ -12,20 +12,69 @@ import java.time.LocalDateTime
 class ActivityController(private val activityMapper: ActivityRecordMapper) {
 
     @GetMapping("/list")
-    fun list(@RequestParam userId: Long): ResponseEntity<ApiResponse<List<ActivityRecord>>> {
+    fun list(@RequestParam userId: Long): ResponseEntity<ApiResponse<ActivityListResponse>> {
         val map = mapOf("user_id" to userId, "is_deleted" to false)
         val records = activityMapper.selectByMap(map)
-        return ResponseEntity.ok(ApiResponse.success(records))
+        val dtos = records.map { it.toDto() }
+        return ResponseEntity.ok(ApiResponse.success(ActivityListResponse(dtos, dtos.size)))
+    }
+
+    @GetMapping("/{id}")
+    fun getById(@PathVariable id: Long): ResponseEntity<ApiResponse<ActivityDto>> {
+        val record = activityMapper.selectById(id)
+            ?: return ResponseEntity.ok(ApiResponse.error(ResultCode.NOT_FOUND))
+        return ResponseEntity.ok(ApiResponse.success(record.toDto()))
     }
 
     @Suppress("NewApi")
-    @PostMapping("/add")
-    fun add(@RequestBody record: ActivityRecord): ResponseEntity<ApiResponse<ActivityRecord>> {
-        record.createdAt = LocalDateTime.now()
-        if (record.occurredAt == null) {
-            record.occurredAt = LocalDateTime.now()
-        }
+    @PostMapping
+    fun create(@RequestBody request: CreateActivityRequest): ResponseEntity<ApiResponse<ActivityDto>> {
+        val record = ActivityRecord(
+            userId = request.userId,
+            type = request.type,
+            protection = request.protection,
+            pleasureRating = request.pleasureRating,
+            healthStatus = request.healthStatus,
+            occurredAt = request.occurredAt ?: LocalDateTime.now(),
+            isDeleted = false,
+            createdAt = LocalDateTime.now()
+        )
         activityMapper.insert(record)
-        return ResponseEntity.ok(ApiResponse.success(record))
+        return ResponseEntity.ok(ApiResponse.success(record.toDto()))
     }
+
+    @PutMapping
+    fun update(@RequestBody request: UpdateActivityRequest): ResponseEntity<ApiResponse<ActivityDto>> {
+        val record = activityMapper.selectById(request.id)
+            ?: return ResponseEntity.ok(ApiResponse.error(ResultCode.NOT_FOUND))
+
+        request.type?.let { record.type = it }
+        request.protection?.let { record.protection = it }
+        request.pleasureRating?.let { record.pleasureRating = it }
+        request.healthStatus?.let { record.healthStatus = it }
+        request.occurredAt?.let { record.occurredAt = it }
+
+        activityMapper.updateById(record)
+        return ResponseEntity.ok(ApiResponse.success(record.toDto()))
+    }
+
+    @DeleteMapping("/{id}")
+    fun delete(@PathVariable id: Long): ResponseEntity<ApiResponse<String>> {
+        val record = activityMapper.selectById(id)
+            ?: return ResponseEntity.ok(ApiResponse.error(ResultCode.NOT_FOUND))
+        record.isDeleted = true
+        activityMapper.updateById(record)
+        return ResponseEntity.ok(ApiResponse.success("Activity deleted"))
+    }
+
+    private fun ActivityRecord.toDto() = ActivityDto(
+        id = id,
+        userId = userId,
+        type = type,
+        protection = protection,
+        pleasureRating = pleasureRating,
+        healthStatus = healthStatus,
+        occurredAt = occurredAt,
+        createdAt = createdAt
+    )
 }
