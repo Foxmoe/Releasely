@@ -29,6 +29,11 @@ data class PartnerInvitationResponse(
     val createdAt: LocalDateTime?
 )
 
+data class PartnerListResponse(
+    val partners: List<PartnerDto>,
+    val total: Int
+)
+
 enum class PartnerStatus {
     PENDING,
     ACCEPTED,

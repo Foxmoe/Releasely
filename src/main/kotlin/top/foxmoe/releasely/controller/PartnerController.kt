@@ -39,7 +39,7 @@ class PartnerController(private val partnerService: PartnerService) {
     fun invitePartner(@RequestBody request: InvitePartnerRequest): ResponseEntity<ApiResponse<Partner>> {
         val existingRelation = partnerService.getPartnerRelation(request.userId, request.partnerId)
         if (existingRelation != null) {
-            return ResponseEntity.ok(ApiResponse.error(409, "Partnership already exists"))
+            return ResponseEntity.ok(ApiResponse.error(ResultCode.CONFLICT))
         }
 
         val partner = Partner(
