@@ -13,6 +13,26 @@ data class RegisterRequest(
 
 data class AuthResponse(
     val token: String,
-    val username: String
+    val username: String,
+    val requires2FA: Boolean = false
 )
 
+data class TwoFactorSetupResponse(
+    val secret: String,
+    val qrCodeUrl: String
+)
+
+data class TwoFactorVerifyRequest(
+    val username: String,
+    val code: String
+)
+
+data class Enable2FARequest(
+    val username: String,
+    val code: String
+)
+
+data class Disable2FARequest(
+    val username: String,
+    val password: String
+)

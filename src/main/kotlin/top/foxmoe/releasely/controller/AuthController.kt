@@ -9,9 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import top.foxmoe.releasely.dto.AuthResponse
-import top.foxmoe.releasely.dto.LoginRequest
-import top.foxmoe.releasely.dto.RegisterRequest
+import top.foxmoe.releasely.dto.*
 import top.foxmoe.releasely.entity.User
 import top.foxmoe.releasely.mapper.UserMapper
 import top.foxmoe.releasely.security.JwtTokenProvider
@@ -27,19 +25,24 @@ class AuthController(
 ) {
 
     @PostMapping("/login")
-    fun login(@RequestBody request: LoginRequest): ResponseEntity<AuthResponse> {
-        val authentication = authenticationManager.authenticate(
-            UsernamePasswordAuthenticationToken(request.username, request.password)
-        )
-        SecurityContextHolder.getContext().authentication = authentication
-        val token = jwtTokenProvider.createToken(request.username)
-        return ResponseEntity.ok(AuthResponse(token, request.username))
+    fun login(@RequestBody request: LoginRequest): ResponseEntity<ApiResponse<AuthResponse>> {
+        return try {
+            val authentication = authenticationManager.authenticate(
+                UsernamePasswordAuthenticationToken(request.username, request.password)
+            )
+            SecurityContextHolder.getContext().authentication = authentication
+            val token = jwtTokenProvider.createToken(request.username)
+            val user = userMapper.selectByMap(mapOf("username" to request.username)).firstOrNull()
+            ResponseEntity.ok(ApiResponse.success(AuthResponse(token, user?.username ?: request.username)))
+        } catch (e: Exception) {
+            ResponseEntity.ok(ApiResponse.error(ResultCode.PASSWORD_ERROR))
+        }
     }
 
     @PostMapping("/register")
-    fun register(@RequestBody request: RegisterRequest): ResponseEntity<String> {
+    fun register(@RequestBody request: RegisterRequest): ResponseEntity<ApiResponse<String>> {
         if (userMapper.selectByMap(mapOf("username" to request.username)).isNotEmpty()) {
-            return ResponseEntity.badRequest().body("Username already exists")
+            return ResponseEntity.ok(ApiResponse.error(ResultCode.USERNAME_EXISTS))
         }
 
         val user = User(
@@ -50,7 +53,7 @@ class AuthController(
             updatedAt = LocalDateTime.now()
         )
         userMapper.insert(user)
-        return ResponseEntity.ok("User registered successfully")
+        return ResponseEntity.ok(ApiResponse.success("User registered successfully"))
     }
 }
 
