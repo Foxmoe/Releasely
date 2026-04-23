@@ -32,3 +32,8 @@ data class UpdateMedicationRequest(
 data class MedicationTakenRequest(
     val id: Long
 )
+
+data class MedicationListResponse(
+    val medications: List<MedicationDto>,
+    val total: Int
+)

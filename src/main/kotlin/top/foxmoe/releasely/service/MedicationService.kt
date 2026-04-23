@@ -66,4 +66,17 @@ class MedicationService(private val medicationMapper: MedicationMapper) {
             reminderTime != null && reminderTime.isBefore(now.plusHours(1))
         }
     }
+
+    fun calculateNeedsReminder(medication: Medication): Boolean {
+        if (!medication.isActive) return false
+        val reminderTime = medication.reminderTime ?: return false
+        val now = LocalDateTime.now()
+        val lastTaken = medication.lastTaken
+
+        return if (lastTaken == null) {
+            reminderTime.isBefore(now.plusMinutes(30))
+        } else {
+            reminderTime.isAfter(lastTaken) && reminderTime.isBefore(now.plusMinutes(30))
+        }
+    }
 }
