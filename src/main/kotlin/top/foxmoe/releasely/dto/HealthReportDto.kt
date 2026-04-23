@@ -38,3 +38,13 @@ data class ReportSummaryResponse(
     val averagePleasure: Double,
     val period: String
 )
+
+data class HealthReportListResponse(
+    val reports: List<HealthReportDto>,
+    val total: Int
+)
+
+enum class ReportType {
+    WEEKLY,
+    MONTHLY
+}

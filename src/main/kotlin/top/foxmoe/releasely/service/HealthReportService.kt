@@ -47,9 +47,9 @@ class HealthReportService(
         return healthReportMapper.deleteById(id) > 0
     }
 
-    fun generateWeeklyReport(userId: Long): HealthReport {
+    fun generateReport(userId: Long, days: Long, periodType: String): HealthReport {
         val endDate = LocalDateTime.now()
-        val startDate = endDate.minusDays(7)
+        val startDate = endDate.minusDays(days)
 
         val wrapper = QueryWrapper<ActivityRecord>()
             .eq("user_id", userId)
@@ -57,46 +57,20 @@ class HealthReportService(
             .le("occurred_at", endDate)
 
         val records = activityRecordMapper.selectList(wrapper)
-
-        val totalActivities = records.size
-        val protectedActivities = records.count { it.protection != null && it.protection.isNotEmpty() }
-        val protectionRate = if (totalActivities > 0) {
-            (protectedActivities.toDouble() / totalActivities) * 100
-        } else {
-            0.0
-        }
-
-        val frequencyData = """
-            {
-                "total": $totalActivities,
-                "protected": $protectedActivities,
-                "unprotected": ${totalActivities - protectedActivities},
-                "averagePleasure": ${records.mapNotNull { it.pleasureRating }.average().takeIf { !it.isNaN() } ?: 0}
-            }
-        """.trimIndent()
+        val frequencyData = buildFrequencyData(records)
 
         val report = HealthReport(
             userId = userId,
-            period = "weekly_${endDate.format(DateTimeFormatter.ISO_DATE)}",
-            frequencyData = frequencyData,
-            protectionRate = protectionRate
+            period = "${periodType}_${endDate.format(DateTimeFormatter.ISO_DATE)}",
+            frequencyData = frequencyData.first,
+            protectionRate = frequencyData.second
         )
 
         createReport(report)
         return report
     }
 
-    fun generateMonthlyReport(userId: Long): HealthReport {
-        val endDate = LocalDateTime.now()
-        val startDate = endDate.minusDays(30)
-
-        val wrapper = QueryWrapper<ActivityRecord>()
-            .eq("user_id", userId)
-            .ge("occurred_at", startDate)
-            .le("occurred_at", endDate)
-
-        val records = activityRecordMapper.selectList(wrapper)
-
+    private fun buildFrequencyData(records: List<ActivityRecord>): Pair<String, Double> {
         val totalActivities = records.size
         val protectedActivities = records.count { it.protection != null && it.protection.isNotEmpty() }
         val protectionRate = if (totalActivities > 0) {
@@ -114,14 +88,14 @@ class HealthReportService(
             }
         """.trimIndent()
 
-        val report = HealthReport(
-            userId = userId,
-            period = "monthly_${endDate.format(DateTimeFormatter.ISO_DATE)}",
-            frequencyData = frequencyData,
-            protectionRate = protectionRate
-        )
+        return Pair(frequencyData, protectionRate)
+    }
 
-        createReport(report)
-        return report
+    fun generateWeeklyReport(userId: Long): HealthReport {
+        return generateReport(userId, 7, "weekly")
+    }
+
+    fun generateMonthlyReport(userId: Long): HealthReport {
+        return generateReport(userId, 30, "monthly")
     }
 }
