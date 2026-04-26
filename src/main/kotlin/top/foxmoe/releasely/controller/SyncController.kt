@@ -19,13 +19,13 @@ class SyncController(private val syncService: SyncService) {
 
     @GetMapping("/pending")
     fun getPendingRecords(@RequestParam userId: Long): ResponseEntity<ApiResponse<List<SyncRecordDto>>> {
-        val records = syncService.getPendingRecords(userId).map { it.toDto() }
+        val records = syncService.getPendingRecordDtos(userId)
         return ResponseEntity.ok(ApiResponse.success(records))
     }
 
     @GetMapping("/conflicts")
     fun getConflictRecords(@RequestParam userId: Long): ResponseEntity<ApiResponse<List<SyncRecordDto>>> {
-        val records = syncService.getConflictRecords(userId).map { it.toDto() }
+        val records = syncService.getConflictRecordDtos(userId)
         return ResponseEntity.ok(ApiResponse.success(records))
     }
 
@@ -57,11 +57,11 @@ class SyncController(private val syncService: SyncService) {
             payload = request.payload
         )
         val id = syncService.createSyncRecord(record)
-        val created = syncService.getPendingRecords(request.userId)
+        val created = syncService.getPendingRecordDtos(request.userId)
             .find { it.id == id }
 
         return if (created != null) {
-            ResponseEntity.ok(ApiResponse.success(created.toDto()))
+            ResponseEntity.ok(ApiResponse.success(created))
         } else {
             ResponseEntity.ok(ApiResponse.error(ResultCode.INTERNAL_ERROR))
         }

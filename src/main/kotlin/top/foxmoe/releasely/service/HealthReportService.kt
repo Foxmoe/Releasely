@@ -72,7 +72,10 @@ class HealthReportService(
 
     private fun buildFrequencyData(records: List<ActivityRecord>): Pair<String, Double> {
         val totalActivities = records.size
-        val protectedActivities = records.count { it.protection != null && it.protection.isNotEmpty() }
+        val protectedActivities = records.count { r ->
+            val p = r.protection
+            p != null && p.isNotEmpty()
+        }
         val protectionRate = if (totalActivities > 0) {
             (protectedActivities.toDouble() / totalActivities) * 100
         } else {

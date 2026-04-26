@@ -10,7 +10,7 @@ import top.foxmoe.releasely.service.DashboardService
 class DashboardController(private val dashboardService: DashboardService) {
 
     @GetMapping
-    fun getDashboard(@RequestParam userId: Long): ResponseEntity<ApiResponse<DashboardDto>> {
+    fun getDashboard(@RequestParam userId: Long): ResponseEntity<ApiResponse<DashboardResponse>> {
         val stats = dashboardService.getStats(userId)
         val recentActivities = dashboardService.getRecentActivities(userId)
         val cyclePrediction = dashboardService.getCyclePrediction(userId)
@@ -36,7 +36,7 @@ class DashboardController(private val dashboardService: DashboardService) {
             )
         }
 
-        val dashboard = DashboardDto(
+        val dashboard = DashboardResponse(
             totalActivities = stats.totalActivities,
             totalCycles = stats.totalCycles,
             activeMedications = stats.activeMedications,

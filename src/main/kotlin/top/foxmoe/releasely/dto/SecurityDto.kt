@@ -44,13 +44,3 @@ data class Enable2FASetupResponse(
     val secret: String,
     val qrCodeUrl: String
 )
-
-data class Enable2FARequest(
-    val userId: Long,
-    val code: String
-)
-
-data class Disable2FARequest(
-    val userId: Long,
-    val password: String
-)

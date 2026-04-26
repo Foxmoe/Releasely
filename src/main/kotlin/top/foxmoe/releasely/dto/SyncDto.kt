@@ -37,6 +37,7 @@ data class SyncConflictDto(
 )
 
 data class ResolveConflictRequest(
+    val userId: Long,
     val entityType: String,
     val entityId: Long,
     val resolution: String, // LOCAL, SERVER, or MERGED

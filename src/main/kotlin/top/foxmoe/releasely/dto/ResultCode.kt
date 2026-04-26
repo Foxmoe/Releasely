@@ -14,5 +14,5 @@ enum class ResultCode(val code: Int, val message: String) {
     USER_NOT_FOUND(404, "用户不存在"),
     PASSWORD_ERROR(401, "密码错误"),
     2FA_REQUIRED(402, "需要二次验证"),
-    CONFLICT(409, "资源冲突");
+    CONFLICT(409, "资源冲突")
 }

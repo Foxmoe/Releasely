@@ -43,11 +43,19 @@ class SyncService(
             .orderByAsc("local_timestamp"))
     }
 
+    fun getPendingRecordDtos(userId: Long): List<SyncRecordDto> {
+        return getPendingRecords(userId).map { it.toDto() }
+    }
+
     fun getConflictRecords(userId: Long): List<SyncRecord> {
         return syncRecordMapper.selectList(QueryWrapper<SyncRecord>()
             .eq("user_id", userId)
             .eq("sync_status", SyncRecord.STATUS_CONFLICT)
             .orderByAsc("local_timestamp"))
+    }
+
+    fun getConflictRecordDtos(userId: Long): List<SyncRecordDto> {
+        return getConflictRecords(userId).map { it.toDto() }
     }
 
     fun createSyncRecord(record: SyncRecord): Long {

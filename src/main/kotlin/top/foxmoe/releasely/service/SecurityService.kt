@@ -126,7 +126,7 @@ class SecurityService(
 
     data class PinVerificationResult(
         val success: Boolean,
-        val attemptsRemaining: Int?,
-        val lockedUntil: LocalDateTime?
+        val attemptsRemaining: Int? = null,
+        val lockedUntil: LocalDateTime? = null
     )
 }
