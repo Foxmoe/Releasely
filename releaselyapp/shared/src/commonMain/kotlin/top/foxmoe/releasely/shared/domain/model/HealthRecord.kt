@@ -1,11 +1,14 @@
 package top.foxmoe.releasely.shared.domain.model
 
 enum class RecordType {
-    WORKOUT,
-    RELAX,
-    SOCIAL,
-    SLEEP,
-    OTHER
+    SEX_SOLO,
+    SEX_PARTNER,
+    MENSTRUATION
+}
+
+enum class BiologicalSex {
+    MALE,
+    FEMALE
 }
 
 data class HealthRecord(

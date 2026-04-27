@@ -28,7 +28,7 @@ class HealthRecordRepositoryImpl(
         return localDatabase.getRecentRecords(limit).map {
             HealthRecord(
                 id = it.id,
-                type = RecordType.valueOf(it.record_type),
+                type = safeParseRecordType(it.record_type),
                 timestampMillis = it.record_time * 1000,
                 protectionEnabled = it.protection_enabled == 1L,
                 pleasureLevel = it.pleasure_level.toInt()
@@ -82,3 +82,16 @@ class HealthRecordRepositoryImpl(
         }
     }
 }
+
+internal fun safeParseRecordType(rawValue: String): RecordType {
+    return when (rawValue.trim().uppercase()) {
+        RecordType.SEX_SOLO.name -> RecordType.SEX_SOLO
+        RecordType.SEX_PARTNER.name -> RecordType.SEX_PARTNER
+        RecordType.MENSTRUATION.name -> RecordType.MENSTRUATION
+        // Legacy values from older app versions.
+        "WORKOUT", "RELAX", "SLEEP", "OTHER" -> RecordType.SEX_SOLO
+        "SOCIAL" -> RecordType.SEX_PARTNER
+        else -> RecordType.SEX_PARTNER
+    }
+}
+

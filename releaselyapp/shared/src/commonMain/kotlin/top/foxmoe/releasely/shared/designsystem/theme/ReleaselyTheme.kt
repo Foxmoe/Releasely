@@ -15,19 +15,20 @@ import androidx.compose.material3.Shapes
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Typography
 
-private val CoralRed = Color(0xFFFF6F61)
-private val VitalOrange = Color(0xFFFF8C42)
-private val DeepBlue = Color(0xFF1D3557)
+private val MintPrimary = Color(0xFF0EA5A4)
+private val SkySecondary = Color(0xFF3B82F6)
+private val DeepBlue = Color(0xFF1E293B)
 private val SlateGray = Color(0xFF5C6773)
-private val LightBackground = Color(0xFFF8FAFC)
-private val DarkBackground = Color(0xFF101622)
+private val LightBackground = Color(0xFFF4F8FB)
+private val DarkBackground = Color(0xFF0F172A)
 
 private val LightColors: ColorScheme = lightColorScheme(
-    primary = CoralRed,
-    secondary = VitalOrange,
+    primary = MintPrimary,
+    secondary = SkySecondary,
     tertiary = DeepBlue,
     background = LightBackground,
     surface = Color.White,
+    outline = Color(0xFFB6C5D5),
     onPrimary = Color.White,
     onSecondary = Color.White,
     onBackground = Color(0xFF111827),
@@ -35,11 +36,12 @@ private val LightColors: ColorScheme = lightColorScheme(
 )
 
 private val DarkColors: ColorScheme = darkColorScheme(
-    primary = VitalOrange,
-    secondary = CoralRed,
-    tertiary = Color(0xFF7FB3FF),
+    primary = Color(0xFF2DD4BF),
+    secondary = Color(0xFF60A5FA),
+    tertiary = Color(0xFF93C5FD),
     background = DarkBackground,
-    surface = Color(0xFF182234),
+    surface = Color(0xFF1E293B),
+    outline = Color(0xFF475569),
     onPrimary = Color.Black,
     onSecondary = Color.Black,
     onBackground = Color(0xFFE5E7EB),
@@ -48,7 +50,7 @@ private val DarkColors: ColorScheme = darkColorScheme(
 
 private val ReleaselyTypography = Typography(
     displayLarge = TextStyle(
-        fontSize = 32.sp,
+        fontSize = 34.sp,
         lineHeight = 38.sp,
         fontWeight = FontWeight.Bold,
         letterSpacing = (-0.2).sp
@@ -73,9 +75,9 @@ private val ReleaselyTypography = Typography(
 )
 
 private val ReleaselyShapes = Shapes(
-    small = RoundedCornerShape(16.dp),
-    medium = RoundedCornerShape(16.dp),
-    large = RoundedCornerShape(24.dp)
+    small = RoundedCornerShape(14.dp),
+    medium = RoundedCornerShape(18.dp),
+    large = RoundedCornerShape(26.dp)
 )
 
 @Composable

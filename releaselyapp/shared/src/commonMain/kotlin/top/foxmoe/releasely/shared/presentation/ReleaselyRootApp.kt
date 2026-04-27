@@ -35,7 +35,7 @@ fun ReleaselyRootApp(viewModel: MainViewModel) {
             Scaffold(
                 topBar = {
                     ReleaselyTopAppBar(
-                        title = if (tab == RootTab.DASHBOARD) "健康仪表盘" else "记录",
+                        title = if (tab == RootTab.DASHBOARD) "健康概览" else "健康记录",
                         onPanicClick = viewModel::togglePanicMode
                     )
                 },
@@ -59,18 +59,26 @@ fun ReleaselyRootApp(viewModel: MainViewModel) {
                 Column(modifier = Modifier.padding(innerPadding).padding(horizontal = 16.dp, vertical = 12.dp)) {
                     when (tab) {
                         RootTab.DASHBOARD -> DashboardScreen(
+                            biologicalSex = uiState.biologicalSex,
                             streakDays = uiState.streakDays,
+                            recentSexCount = uiState.recentSexCount,
+                            cycleDay = uiState.cycleDay,
+                            nextPeriodInDays = uiState.nextPeriodInDays,
                             weeklyTrend = uiState.weeklyTrend
                         )
 
                         RootTab.RECORD -> RecordScreen(
-                            selectedType = uiState.selectedRecordType,
+                            biologicalSex = uiState.biologicalSex,
+                            selectedSexType = uiState.selectedSexRecordType,
                             protectionEnabled = uiState.protectionEnabled,
                             pleasureLevel = uiState.pleasureLevel,
-                            onTypeSelected = viewModel::onTypeSelected,
+                            periodFlowLevel = uiState.periodFlowLevel,
+                            onSexTypeSelected = viewModel::onSexTypeSelected,
                             onProtectionChanged = viewModel::onProtectionChanged,
                             onPleasureChanged = viewModel::onPleasureChanged,
-                            onSaveClick = viewModel::saveRecord
+                            onPeriodFlowChanged = viewModel::onPeriodFlowChanged,
+                            onSaveSexClick = viewModel::saveSexRecord,
+                            onSavePeriodClick = viewModel::savePeriodRecord
                         )
                     }
                 }

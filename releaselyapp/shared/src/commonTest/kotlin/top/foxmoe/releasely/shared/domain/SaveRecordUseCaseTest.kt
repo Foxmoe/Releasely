@@ -15,7 +15,7 @@ class SaveRecordUseCaseTest {
     fun rejectInvalidPleasureRange() = runTest {
         val useCase = SaveRecordUseCase(FakeHealthRecordRepository())
         val result = useCase(
-            type = RecordType.RELAX,
+            type = RecordType.SEX_PARTNER,
             protectionEnabled = true,
             pleasureLevel = 99
         )
@@ -29,7 +29,7 @@ class SaveRecordUseCaseTest {
         val useCase = SaveRecordUseCase(repository)
 
         val result = useCase(
-            type = RecordType.WORKOUT,
+            type = RecordType.SEX_SOLO,
             protectionEnabled = false,
             pleasureLevel = 8
         )
