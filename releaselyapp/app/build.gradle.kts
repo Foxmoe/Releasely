@@ -1,6 +1,7 @@
 plugins {
     id("com.android.application")
     kotlin("android")
+    kotlin("plugin.compose")
     id("app.cash.sqldelight")
 }
 
@@ -43,9 +44,6 @@ android {
     buildFeatures {
         compose = true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.8"
-    }
 }
 
 dependencies {
@@ -55,6 +53,8 @@ dependencies {
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
     implementation("androidx.activity:activity-compose:1.8.2")
+    implementation("io.insert-koin:koin-android:3.5.6")
+    implementation("io.insert-koin:koin-androidx-compose:3.5.6")
 
     // Compose 依赖 (可选，如果你用 XML 可以去掉)
     implementation(platform("androidx.compose:compose-bom:2023.10.01"))
@@ -65,6 +65,6 @@ dependencies {
 
     debugImplementation("androidx.compose.ui:ui-tooling")
 
-    implementation("app.cash.sqldelight:android-driver:2.0.1")
-    implementation("app.cash.sqldelight:coroutines-extensions:2.0.1")
+    implementation("app.cash.sqldelight:android-driver:2.0.2")
+    implementation("app.cash.sqldelight:coroutines-extensions:2.0.2")
 }

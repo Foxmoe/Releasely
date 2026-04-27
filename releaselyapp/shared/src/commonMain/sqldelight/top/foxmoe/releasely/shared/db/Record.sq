@@ -1,0 +1,30 @@
+CREATE TABLE Record (
+    id TEXT NOT NULL PRIMARY KEY,
+    record_type TEXT NOT NULL,
+    record_time INTEGER NOT NULL,
+    protection_enabled INTEGER NOT NULL DEFAULT 0,
+    pleasure_level INTEGER NOT NULL,
+    created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+    updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+);
+
+insertRecord:
+INSERT INTO Record(id, record_type, record_time, protection_enabled, pleasure_level, created_at, updated_at)
+VALUES (?, ?, ?, ?, ?, strftime('%s', 'now'), strftime('%s', 'now'));
+
+getRecordById:
+SELECT * FROM Record WHERE id = ?;
+
+getRecentRecords:
+SELECT * FROM Record ORDER BY record_time DESC LIMIT ?;
+
+getRecordsBetween:
+SELECT * FROM Record
+WHERE record_time BETWEEN ? AND ?
+ORDER BY record_time ASC;
+
+deleteRecordById:
+DELETE FROM Record WHERE id = ?;
+
+clearAllRecords:
+DELETE FROM Record;

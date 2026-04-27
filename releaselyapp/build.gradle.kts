@@ -6,7 +6,9 @@ plugins {
     id("com.android.library") apply false
     kotlin("android") apply false
     kotlin("multiplatform") apply false
-    id("app.cash.sqldelight") version "2.0.1" apply false
+    kotlin("plugin.serialization") apply false
+    id("org.jetbrains.compose") apply false
+    id("app.cash.sqldelight") apply false
 }
 
 tasks.register("clean", Delete::class) {

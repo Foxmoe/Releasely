@@ -5,20 +5,44 @@
         android:name=".ReleaselyApp"
         android:allowBackup="true"
         android:icon="@mipmap/ic_releasely_launcher"
-        android:label="@string/app_name"
+        android:label="起飞了么"
         android:roundIcon="@mipmap/ic_releasely_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Releasely">
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.Releasely">
+            android:theme="@style/Theme.Releasely" />
+
+        <activity-alias
+            android:name=".LauncherNormal"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@mipmap/ic_releasely_launcher"
+            android:label="起飞了么"
+            android:roundIcon="@mipmap/ic_releasely_launcher_round"
+            android:targetActivity=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".LauncherCalc"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_calc"
+            android:label="计算器"
+            android:roundIcon="@mipmap/ic_calc_round"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
     </application>
 
 </manifest>
