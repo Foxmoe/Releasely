@@ -28,7 +28,7 @@ class CycleServiceTest {
     private lateinit var cycleService: CycleService
 
     private lateinit var testCycle: Cycle
-    private lateinit var testUserId: Long
+    private var testUserId: Long = 1L
 
     @BeforeEach
     fun setup() {
@@ -46,7 +46,7 @@ class CycleServiceTest {
     @Test
     fun `getCyclesByUserId should return cycles for user`() {
         val cycles = listOf(testCycle)
-        `when`(cycleMapper.selectList(any(QueryWrapper::class.java))).thenReturn(cycles)
+        `when`(cycleMapper.selectList(org.mockito.ArgumentMatchers.any<QueryWrapper<Cycle>>())).thenReturn(cycles)
 
         val result = cycleService.getCyclesByUserId(testUserId)
 
@@ -107,7 +107,7 @@ class CycleServiceTest {
 
     @Test
     fun `predictNextPeriod should return null when less than 2 cycles`() {
-        `when`(cycleMapper.selectList(any(QueryWrapper::class.java))).thenReturn(listOf(testCycle))
+        `when`(cycleMapper.selectList(org.mockito.ArgumentMatchers.any<QueryWrapper<Cycle>>())).thenReturn(listOf(testCycle))
 
         val result = cycleService.predictNextPeriod(testUserId)
 
@@ -120,7 +120,7 @@ class CycleServiceTest {
             id = 2L,
             startDate = testCycle.startDate?.minusDays(28)
         )
-        `when`(cycleMapper.selectList(any(QueryWrapper::class.java))).thenReturn(listOf(testCycle, previousCycle))
+        `when`(cycleMapper.selectList(org.mockito.ArgumentMatchers.any<QueryWrapper<Cycle>>())).thenReturn(listOf(testCycle, previousCycle))
         `when`(cycleMapper.updateById(any(Cycle::class.java))).thenReturn(1)
 
         val result = cycleService.predictNextPeriod(testUserId)
@@ -131,7 +131,7 @@ class CycleServiceTest {
 
     @Test
     fun `calculateAverageCycleLength should return duration when only one cycle`() {
-        `when`(cycleMapper.selectList(any(QueryWrapper::class.java))).thenReturn(listOf(testCycle))
+        `when`(cycleMapper.selectList(org.mockito.ArgumentMatchers.any<QueryWrapper<Cycle>>())).thenReturn(listOf(testCycle))
 
         val result = cycleService.calculateAverageCycleLength(testUserId)
 
@@ -144,7 +144,7 @@ class CycleServiceTest {
             id = 2L,
             startDate = testCycle.startDate?.minusDays(28)
         )
-        `when`(cycleMapper.selectList(any(QueryWrapper::class.java))).thenReturn(listOf(testCycle, previousCycle))
+        `when`(cycleMapper.selectList(org.mockito.ArgumentMatchers.any<QueryWrapper<Cycle>>())).thenReturn(listOf(testCycle, previousCycle))
 
         val result = cycleService.calculateAverageCycleLength(testUserId)
 

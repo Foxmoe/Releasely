@@ -39,19 +39,19 @@ class DashboardServiceTest {
     @InjectMocks
     private lateinit var dashboardService: DashboardService
 
-    private lateinit var testUserId: Long
+    private val testUserId: Long = 1L
 
     @BeforeEach
     fun setup() {
-        testUserId = 1L
+        // testUserId is already initialized
     }
 
     @Test
     fun `getStats should return correct counts`() {
-        `when`(activityMapper.selectCount(any(QueryWrapper::class.java))).thenReturn(10L)
-        `when`(cycleMapper.selectCount(any(QueryWrapper::class.java))).thenReturn(2L)
-        `when`(medicationMapper.selectCount(any(QueryWrapper::class.java))).thenReturn(3L)
-        `when`(partnerMapper.selectCount(any(QueryWrapper::class.java))).thenReturn(1L)
+        `when`(activityMapper.selectCount(any())).thenReturn(10L)
+        `when`(cycleMapper.selectCount(any())).thenReturn(2L)
+        `when`(medicationMapper.selectCount(any())).thenReturn(3L)
+        `when`(partnerMapper.selectCount(any())).thenReturn(1L)
 
         val result = dashboardService.getStats(testUserId)
 
@@ -68,7 +68,7 @@ class DashboardServiceTest {
             ActivityRecord(id = 2L, userId = testUserId),
             ActivityRecord(id = 3L, userId = testUserId)
         )
-        `when`(activityMapper.selectList(any(QueryWrapper::class.java))).thenReturn(activities)
+        `when`(activityMapper.selectList(any())).thenReturn(activities)
 
         val result = dashboardService.getRecentActivities(testUserId, 2)
 
@@ -77,7 +77,7 @@ class DashboardServiceTest {
 
     @Test
     fun `getCyclePrediction should return null when less than 2 cycles`() {
-        `when`(cycleMapper.selectList(any(QueryWrapper::class.java))).thenReturn(listOf(
+        `when`(cycleMapper.selectList(any())).thenReturn(listOf(
             Cycle(id = 1L, userId = testUserId, startDate = LocalDate.now())
         ))
 
@@ -99,7 +99,7 @@ class DashboardServiceTest {
             userId = testUserId,
             startDate = now
         )
-        `when`(cycleMapper.selectList(any(QueryWrapper::class.java))).thenReturn(listOf(latestCycle, previousCycle))
+        `when`(cycleMapper.selectList(any())).thenReturn(listOf(latestCycle, previousCycle))
 
         val result = dashboardService.getCyclePrediction(testUserId)
 
@@ -115,15 +115,15 @@ class DashboardServiceTest {
             userId = testUserId,
             startDate = null
         )
-        `when`(cycleMapper.selectList(any(QueryWrapper::class.java))).thenReturn(listOf(previousCycle))
+        `when`(cycleMapper.selectList(any())).thenReturn(listOf(previousCycle))
 
         val result = dashboardService.getCyclePrediction(testUserId)
 
         assertNull(result)
     }
 
-    private fun <T> any(type: Class<T>): T {
-        return org.mockito.ArgumentMatchers.any(type)
+    private fun <T> any(): T {
+        return org.mockito.ArgumentMatchers.any()
     }
 
     private fun <T> `when`(mock: T): org.mockito.stubbing.OngoingStubbing<T> {

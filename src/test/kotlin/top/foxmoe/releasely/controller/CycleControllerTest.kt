@@ -32,7 +32,7 @@ class CycleControllerTest {
 
     private lateinit var objectMapper: ObjectMapper
     private lateinit var testCycle: Cycle
-    private lateinit var testUserId: Long
+    private var testUserId: Long = 1L
 
     @BeforeEach
     fun setup() {
