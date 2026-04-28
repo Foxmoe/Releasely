@@ -10,6 +10,8 @@ jobs:
   backend:
     name: Backend Build & Test
     runs-on: ubuntu-latest
+    env:
+      GRADLE_OPTS: -Dorg.gradle.jvmargs="-Xmx2g" -Dorg.gradle.daemon=false
     steps:
       - uses: actions/checkout@v4
 
@@ -26,10 +28,10 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build with Gradle
-        run: ./gradlew build -x test
+        run: ./gradlew build -x test --no-daemon
 
       - name: Run tests
-        run: ./gradlew test
+        run: ./gradlew test --no-daemon
 
       - name: Upload test reports
         if: always()
@@ -41,6 +43,8 @@ jobs:
   android:
     name: Android Build
     runs-on: ubuntu-latest
+    env:
+      GRADLE_OPTS: -Dorg.gradle.jvmargs="-Xmx2g" -Dorg.gradle.daemon=false
     steps:
       - uses: actions/checkout@v4
 
@@ -53,6 +57,8 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
       - name: Build Android App
-        working-directory: ./releaselyapp
-        run: ./gradlew build
+        run: ./gradlew -p releaselyapp build --no-daemon
