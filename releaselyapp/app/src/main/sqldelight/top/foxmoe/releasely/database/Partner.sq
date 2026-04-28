@@ -1,0 +1,33 @@
+CREATE TABLE Partner (
+    id TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    invite_code TEXT NOT NULL UNIQUE,
+    status TEXT NOT NULL DEFAULT 'pending',
+    shared_permissions TEXT,
+    created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+);
+
+getAllPartners:
+SELECT * FROM Partner ORDER BY created_at DESC;
+
+getPartnerById:
+SELECT * FROM Partner WHERE id = ?;
+
+getPartnerByInviteCode:
+SELECT * FROM Partner WHERE invite_code = ?;
+
+insertPartner:
+INSERT INTO Partner(id, name, invite_code, status, shared_permissions, created_at)
+VALUES (?, ?, ?, 'pending', '{}', strftime('%s', 'now'));
+
+updatePartnerStatus:
+UPDATE Partner SET status = ? WHERE id = ?;
+
+updatePartnerPermissions:
+UPDATE Partner SET shared_permissions = ? WHERE id = ?;
+
+deletePartner:
+DELETE FROM Partner WHERE id = ?;
+
+countPartners:
+SELECT COUNT(*) FROM Partner;

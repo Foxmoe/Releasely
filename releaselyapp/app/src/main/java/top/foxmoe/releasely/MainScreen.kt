@@ -16,11 +16,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 @Composable
 fun MainScreen() {
@@ -64,6 +68,30 @@ fun MainScreen() {
 
 @Composable
 fun HomeScreen() {
+    val context = LocalContext.current
+    val app = context.applicationContext as ReleaselyApp
+
+    var activityCount by remember { mutableIntStateOf(0) }
+    var cycleDay by remember { mutableIntStateOf(0) }
+    var cyclePhase by remember { mutableStateOf("") }
+    var protectionRate by remember { mutableStateOf("0%") }
+
+    LaunchedEffect(Unit) {
+        activityCount = app.activityService.getActivityCount().toInt()
+        val latestCycle = app.cycleService.getLatestCycle()
+        if (latestCycle != null) {
+            val now = System.currentTimeMillis() / 1000
+            val daysSinceStart = ((now - latestCycle.startDate) / (24 * 60 * 60)).toInt()
+            cycleDay = daysSinceStart
+            cyclePhase = when {
+                daysSinceStart < 5 -> "月经期"
+                daysSinceStart < 14 -> "卵泡期"
+                daysSinceStart < 21 -> "排卵期"
+                else -> "黄体期"
+            }
+        }
+    }
+
     val greeting = remember {
         val hour = java.time.LocalTime.now().hour
         when {
@@ -89,7 +117,7 @@ fun HomeScreen() {
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "今天是你记录的第 1 天",
+                text = "已记录 $activityCount 天",
                 fontSize = 14.sp,
                 color = Color.Gray
             )
@@ -112,15 +140,15 @@ fun HomeScreen() {
             ) {
                 StatCard(
                     title = "周期天数",
-                    value = "Day 14",
-                    subtitle = "排卵期",
+                    value = if (cycleDay > 0) "Day $cycleDay" else "-",
+                    subtitle = cyclePhase.ifEmpty { "未记录" },
                     color = Color(0xFFE3F2FD),
                     modifier = Modifier.weight(1f)
                 )
                 StatCard(
                     title = "亲密次数",
-                    value = "2",
-                    subtitle = "本周",
+                    value = activityCount.toString(),
+                    subtitle = "累计",
                     color = Color(0xFFFCE4EC),
                     modifier = Modifier.weight(1f)
                 )
@@ -134,14 +162,14 @@ fun HomeScreen() {
             ) {
                 StatCard(
                     title = "保护率",
-                    value = "100%",
+                    value = protectionRate,
                     subtitle = "本月",
                     color = Color(0xFFE8F5E9),
                     modifier = Modifier.weight(1f)
                 )
                 StatCard(
                     title = "心情指数",
-                    value = "良好",
+                    value = "-",
                     subtitle = "今日",
                     color = Color(0xFFFFF3E0),
                     modifier = Modifier.weight(1f)
@@ -167,136 +195,19 @@ fun HomeScreen() {
                 }
             }
         }
-
-        item {
-            RecentRecordCard(
-                date = "今天",
-                type = "亲密行为",
-                protection = "有保护",
-                mood = "愉悦",
-                onClick = { }
-            )
-        }
-
-        item {
-            RecentRecordCard(
-                date = "昨天",
-                type = "月经开始",
-                protection = "-",
-                mood = "不适",
-                onClick = { }
-            )
-        }
-    }
-}
-
-@Composable
-fun StatCard(
-    title: String,
-    value: String,
-    subtitle: String,
-    color: Color,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = color)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(
-                text = title,
-                fontSize = 12.sp,
-                color = Color.Gray
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = value,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = subtitle,
-                fontSize = 11.sp,
-                color = Color.Gray
-            )
-        }
-    }
-}
-
-@Composable
-fun RecentRecordCard(
-    date: String,
-    type: String,
-    protection: String,
-    mood: String,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFFAFAFA))
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFE0E0E0)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Favorite,
-                        contentDescription = null,
-                        tint = Color(0xFFE91E63),
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(12.dp))
-                Column {
-                    Text(
-                        text = type,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color.Black
-                    )
-                    Text(
-                        text = date,
-                        fontSize = 12.sp,
-                        color = Color.Gray
-                    )
-                }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = protection, fontSize = 12.sp, color = Color.Gray)
-                    Text(text = "保护", fontSize = 10.sp, color = Color.LightGray)
-                }
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = mood, fontSize = 12.sp, color = Color.Gray)
-                    Text(text = "心情", fontSize = 10.sp, color = Color.LightGray)
-                }
-            }
-        }
     }
 }
 
 @Composable
 fun DataScreen() {
+    val context = LocalContext.current
+    val app = context.applicationContext as ReleaselyApp
+
     var selectedTab by remember { mutableIntStateOf(0) }
+    var showActivityForm by remember { mutableStateOf(false) }
+    var showCycleForm by remember { mutableStateOf(false) }
+    var showMedicationForm by remember { mutableStateOf(false) }
+
     val tabs = listOf("行为", "周期", "健康")
 
     Column(
@@ -334,352 +245,263 @@ fun DataScreen() {
         Spacer(modifier = Modifier.height(16.dp))
 
         when (selectedTab) {
-            0 -> ActivityTab()
-            1 -> CycleTab()
-            2 -> HealthTab()
+            0 -> ActivityTab(
+                onAddClick = { showActivityForm = true },
+                onMarkTaken = { id -> /* handle */ }
+            )
+            1 -> CycleTab(onAddClick = { showCycleForm = true })
+            2 -> HealthTab(
+                onAddClick = { showMedicationForm = true },
+                onMarkTaken = { id -> /* handle */ }
+            )
         }
+    }
+
+    if (showActivityForm) {
+        AlertDialog(
+            onDismissRequest = { showActivityForm = false },
+            confirmButton = {},
+            text = {
+                top.foxmoe.releasely.components.ActivityForm(
+                    onSubmit = { date, type, protection, pleasure, mood, notes ->
+                        kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                            app.activityService.insertActivity(date, type, protection, pleasure, mood, notes, null)
+                        }
+                        showActivityForm = false
+                    },
+                    onCancel = { showActivityForm = false }
+                )
+            }
+        )
+    }
+
+    if (showCycleForm) {
+        AlertDialog(
+            onDismissRequest = { showCycleForm = false },
+            confirmButton = {},
+            text = {
+                top.foxmoe.releasely.components.CycleForm(
+                    onSubmit = { startDate, duration ->
+                        kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                            app.cycleService.insertCycle(startDate, duration, null)
+                        }
+                        showCycleForm = false
+                    },
+                    onCancel = { showCycleForm = false }
+                )
+            }
+        )
+    }
+
+    if (showMedicationForm) {
+        AlertDialog(
+            onDismissRequest = { showMedicationForm = false },
+            confirmButton = {},
+            text = {
+                top.foxmoe.releasely.components.MedicationForm(
+                    onSubmit = { name, dosage, reminderTime ->
+                        kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                            app.medicationService.insertMedication(name, dosage, reminderTime)
+                        }
+                        showMedicationForm = false
+                    },
+                    onCancel = { showMedicationForm = false }
+                )
+            }
+        )
     }
 }
 
 @Composable
-fun ActivityTab() {
+fun ActivityTab(onAddClick: () -> Unit, onMarkTaken: (String) -> Unit) {
+    val context = LocalContext.current
+    val app = context.applicationContext as ReleaselyApp
+
+    var activities by remember { mutableStateOf<List<top.foxmoe.releasely.services.ActivityRecord>>(emptyList()) }
+
+    LaunchedEffect(Unit) {
+        activities = app.activityService.getAllActivities()
+    }
+
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {
-            AddRecordCard()
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.Black),
+                onClick = onAddClick
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = "添加",
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "添加新记录",
+                        color = Color.White,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
         }
-        items(5) { index ->
+
+        items(activities.size) { index ->
+            val activity = activities[index]
             RecordItem(
-                date = "2026-04-${27 - index}",
-                type = if (index % 2 == 0) "亲密行为" else "亲密行为",
-                protection = if (index % 3 == 0) "有保护" else "无保护",
-                mood = listOf("愉悦", "一般", "不适")[index % 3]
+                date = formatDate(activity.date),
+                type = activity.type,
+                protection = if (activity.protection) "有保护" else "无保护",
+                mood = activity.mood ?: "-"
             )
         }
     }
 }
 
 @Composable
-fun CycleTab() {
+fun CycleTab(onAddClick: () -> Unit) {
+    val context = LocalContext.current
+    val app = context.applicationContext as ReleaselyApp
+
+    var cycles by remember { mutableStateOf<List<top.foxmoe.releasely.services.CycleRecord>>(emptyList()) }
+
+    LaunchedEffect(Unit) {
+        cycles = app.cycleService.getAllCycles()
+    }
+
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {
             CycleOverviewCard()
         }
-        items(3) { index ->
+
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.Black),
+                onClick = onAddClick
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = "添加",
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "记录月经",
+                        color = Color.White,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+        }
+
+        items(cycles.size) { index ->
+            val cycle = cycles[index]
             CycleRecordItem(
-                startDate = "2026-04-${10 - index * 5}",
-                duration = "${5 + index}天",
-                symptoms = listOf("腹痛", "腰酸", "情绪波动")[index % 3]
+                startDate = formatDate(cycle.startDate),
+                duration = cycle.duration?.toString() ?: "-",
+                symptoms = ""
             )
         }
     }
 }
 
 @Composable
-fun HealthTab() {
+fun HealthTab(onAddClick: () -> Unit, onMarkTaken: (String) -> Unit) {
+    val context = LocalContext.current
+    val app = context.applicationContext as ReleaselyApp
+
+    var medications by remember { mutableStateOf<List<top.foxmoe.releasely.services.MedicationRecord>>(emptyList()) }
+
+    LaunchedEffect(Unit) {
+        medications = app.medicationService.getAllMedications()
+    }
+
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {
-            HealthReminderCard()
+            HealthReminderCard(count = medications.size)
         }
-        items(2) { index ->
+
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.Black),
+                onClick = onAddClick
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = "添加",
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "添加药物",
+                        color = Color.White,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+        }
+
+        items(medications.size) { index ->
+            val medication = medications[index]
             MedicationItem(
-                name = listOf("短效避孕药", "维生素")[index],
-                dosage = listOf("每日1片", "每日1粒")[index],
-                nextTime = listOf("今晚 22:00", "明早 08:00")[index],
-                taken = index == 0
-            )
-        }
-    }
-}
-
-@Composable
-fun AddRecordCard() {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Black)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Add,
-                contentDescription = "添加",
-                tint = Color.White,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "添加新记录",
-                color = Color.White,
-                fontWeight = FontWeight.Medium
-            )
-        }
-    }
-}
-
-@Composable
-fun RecordItem(
-    date: String,
-    type: String,
-    protection: String,
-    mood: String
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFFAFAFA))
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
-                Text(
-                    text = type,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.Black
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = date,
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Chip(text = protection)
-                Chip(text = mood)
-            }
-        }
-    }
-}
-
-@Composable
-fun Chip(text: String) {
-    Surface(
-        shape = RoundedCornerShape(8.dp),
-        color = Color(0xFFE0E0E0)
-    ) {
-        Text(
-            text = text,
-            fontSize = 11.sp,
-            color = Color.Black,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-        )
-    }
-}
-
-@Composable
-fun CycleOverviewCard() {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD))
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(
-                text = "当前周期",
-                fontSize = 12.sp,
-                color = Color.Gray
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "第 14 天",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Row {
-                Text(
-                    text = "预计下次月经: ",
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
-                Text(
-                    text = "2026-05-11",
-                    fontSize = 12.sp,
-                    color = Color.Black
-                )
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            LinearProgressIndicator(
-                progress = { 0.6f },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(4.dp)),
-                color = Color(0xFF2196F3),
-                trackColor = Color.White,
-            )
-        }
-    }
-}
-
-@Composable
-fun CycleRecordItem(
-    startDate: String,
-    duration: String,
-    symptoms: String
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFFAFAFA))
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
-                Text(
-                    text = "月经期",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.Black
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "开始于 $startDate",
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
-            }
-            Column(horizontalAlignment = Alignment.End) {
-                Text(text = duration, fontSize = 14.sp, color = Color.Black)
-                Text(text = "持续时间", fontSize = 10.sp, color = Color.Gray)
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(text = symptoms, fontSize = 11.sp, color = Color(0xFFE91E63))
-            }
-        }
-    }
-}
-
-@Composable
-fun HealthReminderCard() {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0))
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Filled.Notifications,
-                    contentDescription = null,
-                    tint = Color(0xFFFF9800),
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Column {
-                    Text(
-                        text = "用药提醒",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color.Black
-                    )
-                    Text(
-                        text = "3 个待提醒",
-                        fontSize = 12.sp,
-                        color = Color.Gray
-                    )
-                }
-            }
-            Icon(
-                imageVector = Icons.Filled.ChevronRight,
-                contentDescription = null,
-                tint = Color.Gray
-            )
-        }
-    }
-}
-
-@Composable
-fun MedicationItem(
-    name: String,
-    dosage: String,
-    nextTime: String,
-    taken: Boolean
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (taken) Color(0xFFE8F5E9) else Color(0xFFFAFAFA)
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Text(
-                    text = name,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.Black
-                )
-                Text(
-                    text = dosage,
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = nextTime,
-                        fontSize = 12.sp,
-                        color = Color.Gray
-                    )
-                    Text(
-                        text = if (taken) "已服用" else "未服用",
-                        fontSize = 11.sp,
-                        color = if (taken) Color(0xFF4CAF50) else Color(0xFFE91E63)
-                    )
-                }
-                if (!taken) {
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Button(
-                        onClick = { },
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF4CAF50)
-                        ),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-                    ) {
-                        Text("服用", fontSize = 12.sp)
+                name = medication.name,
+                dosage = medication.dosage,
+                nextTime = formatTime(medication.reminderTime),
+                taken = medication.lastTaken != null,
+                onTakenClick = {
+                    kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                        app.medicationService.markTaken(medication.id)
                     }
                 }
-            }
+            )
         }
     }
+}
+
+fun formatDate(timestamp: Long): String {
+    val instant = Instant.ofEpochSecond(timestamp)
+    val localDate = instant.atZone(ZoneId.systemDefault()).toLocalDate()
+    return localDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+}
+
+fun formatTime(timestamp: Long): String {
+    val instant = Instant.ofEpochSecond(timestamp)
+    val localDateTime = instant.atZone(ZoneId.systemDefault()).toLocalDateTime()
+    return localDateTime.format(DateTimeFormatter.ofPattern("HH:mm"))
 }
 
 @Composable
@@ -783,6 +605,10 @@ fun ToolCard(
 
 @Composable
 fun ProfileScreen() {
+    val context = LocalContext.current
+    var showPartnerScreen by remember { mutableStateOf(false) }
+    var showSecurityScreen by remember { mutableStateOf(false) }
+
     val menuItems = remember {
         listOf(
             MenuItem("个人资料", Icons.Filled.Person, Color(0xFF2196F3)),
@@ -793,6 +619,38 @@ fun ProfileScreen() {
             MenuItem("关于", Icons.Filled.Info, Color(0xFF9E9E9E)),
             MenuItem("退出登录", Icons.Filled.ExitToApp, Color(0xFFF44336))
         )
+    }
+
+    if (showPartnerScreen) {
+        val partners = remember { mutableStateOf<List<PartnerDisplayItem>>(emptyList()) }
+        LaunchedEffect(Unit) {
+            val app = context.applicationContext as ReleaselyApp
+            partners.value = app.partnerService.getAllPartners().map {
+                PartnerDisplayItem(it.id, it.name, it.inviteCode, it.status)
+            }
+        }
+        top.foxmoe.releasely.screens.PartnerScreen(
+            partners = partners.value,
+            onAddPartner = { name ->
+                kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                    val app = context.applicationContext as ReleaselyApp
+                    app.partnerService.insertPartner(name)
+                }
+            },
+            onInvitePartner = { code ->
+                // Handle invite
+            },
+            onBack = { showPartnerScreen = false }
+        )
+        return
+    }
+
+    if (showSecurityScreen) {
+        top.foxmoe.releasely.screens.SecuritySettingsScreen(
+            onBack = { showSecurityScreen = false },
+            onDecoyNavigate = { }
+        )
+        return
     }
 
     LazyColumn(
@@ -806,10 +664,16 @@ fun ProfileScreen() {
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        items(menuItems) { menuItem ->
+        items(menuItems.size) { index ->
+            val menuItem = menuItems[index]
             MenuListItem(
                 menuItem = menuItem,
-                onClick = { }
+                onClick = {
+                    when (menuItem.title) {
+                        "伴侣管理" -> showPartnerScreen = true
+                        "安全设置" -> showSecurityScreen = true
+                    }
+                }
             )
         }
     }
@@ -845,7 +709,7 @@ fun ProfileHeader() {
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "已记录 1 天",
+                text = "已记录 0 天",
                 fontSize = 14.sp,
                 color = Color.Gray
             )
@@ -897,6 +761,302 @@ fun MenuListItem(
                 tint = Color.Gray,
                 modifier = Modifier.size(20.dp)
             )
+        }
+    }
+}
+
+@Composable
+fun StatCard(
+    title: String,
+    value: String,
+    subtitle: String,
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = color)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = title,
+                fontSize = 12.sp,
+                color = Color.Gray
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = value,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = subtitle,
+                fontSize = 11.sp,
+                color = Color.Gray
+            )
+        }
+    }
+}
+
+@Composable
+fun RecordItem(
+    date: String,
+    type: String,
+    protection: String,
+    mood: String
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFAFAFA))
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text(
+                    text = type,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.Black
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = date,
+                    fontSize = 12.sp,
+                    color = Color.Gray
+                )
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Chip(text = protection)
+                Chip(text = mood)
+            }
+        }
+    }
+}
+
+@Composable
+fun Chip(text: String) {
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = Color(0xFFE0E0E0)
+    ) {
+        Text(
+            text = text,
+            fontSize = 11.sp,
+            color = Color.Black,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+        )
+    }
+}
+
+@Composable
+fun CycleOverviewCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD))
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = "当前周期",
+                fontSize = 12.sp,
+                color = Color.Gray
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Day -",
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Row {
+                Text(
+                    text = "预计下次月经: ",
+                    fontSize = 12.sp,
+                    color = Color.Gray
+                )
+                Text(
+                    text = "-",
+                    fontSize = 12.sp,
+                    color = Color.Black
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            LinearProgressIndicator(
+                progress = { 0f },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp)),
+                color = Color(0xFF2196F3),
+                trackColor = Color.White,
+            )
+        }
+    }
+}
+
+@Composable
+fun CycleRecordItem(
+    startDate: String,
+    duration: String,
+    symptoms: String
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFAFAFA))
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text(
+                    text = "月经期",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.Black
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "开始于 $startDate",
+                    fontSize = 12.sp,
+                    color = Color.Gray
+                )
+            }
+            Column(horizontalAlignment = Alignment.End) {
+                Text(text = "${duration}天", fontSize = 14.sp, color = Color.Black)
+                Text(text = "持续时间", fontSize = 10.sp, color = Color.Gray)
+                Spacer(modifier = Modifier.height(4.dp))
+                if (symptoms.isNotEmpty()) {
+                    Text(text = symptoms, fontSize = 11.sp, color = Color(0xFFE91E63))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun HealthReminderCard(count: Int) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0))
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Filled.Notifications,
+                    contentDescription = null,
+                    tint = Color(0xFFFF9800),
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = "用药提醒",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.Black
+                    )
+                    Text(
+                        text = "$count 个待提醒",
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+                }
+            }
+            Icon(
+                imageVector = Icons.Filled.ChevronRight,
+                contentDescription = null,
+                tint = Color.Gray
+            )
+        }
+    }
+}
+
+@Composable
+fun MedicationItem(
+    name: String,
+    dosage: String,
+    nextTime: String,
+    taken: Boolean,
+    onTakenClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (taken) Color(0xFFE8F5E9) else Color(0xFFFAFAFA)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    text = name,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.Black
+                )
+                Text(
+                    text = dosage,
+                    fontSize = 12.sp,
+                    color = Color.Gray
+                )
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = nextTime,
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+                    Text(
+                        text = if (taken) "已服用" else "未服用",
+                        fontSize = 11.sp,
+                        color = if (taken) Color(0xFF4CAF50) else Color(0xFFE91E63)
+                    )
+                }
+                if (!taken) {
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Button(
+                        onClick = onTakenClick,
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF4CAF50)
+                        ),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        Text("服用", fontSize = 12.sp)
+                    }
+                }
+            }
         }
     }
 }

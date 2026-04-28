@@ -67,4 +67,5 @@ dependencies {
 
     implementation("app.cash.sqldelight:android-driver:2.0.1")
     implementation("app.cash.sqldelight:coroutines-extensions:2.0.1")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 }

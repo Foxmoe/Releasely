@@ -1,5 +1,6 @@
 package top.foxmoe.releasely
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -12,6 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.UUID
+import java.security.MessageDigest
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,27 +28,37 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    var isChecking by remember { mutableStateOf(true) }
-                    var showWelcome by remember { mutableStateOf(false) }
+                    var screenState by remember { mutableStateOf<ScreenState>(ScreenState.Loading) }
                     val scope = rememberCoroutineScope()
 
                     LaunchedEffect(Unit) {
-                        try {
-                            withContext(Dispatchers.IO) {
-                                val count = queries.countProfiles().executeAsOne()
-                                showWelcome = count == 0L
-                            }
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                            // Fallback in case of DB error
-                            showWelcome = true
-                        } finally {
-                            isChecking = false
-                        }
+                        screenState = checkSecurityAndShowScreen(app)
                     }
 
-                    if (!isChecking) {
-                        if (showWelcome) {
+                    when (val state = screenState) {
+                        is ScreenState.Loading -> {
+                            // Loading
+                        }
+                        is ScreenState.Decoy -> {
+                            DecoyScreenComponent()
+                        }
+                        is ScreenState.AppLock -> {
+                            AppLockScreenComponent(
+                                onUnlock = { pin ->
+                                    val prefs = getSharedPreferences("security", Context.MODE_PRIVATE)
+                                    val storedHash = prefs.getString("pin_hash", "") ?: ""
+                                    val inputHash = hashPin(pin)
+                                    if (inputHash == storedHash) {
+                                        screenState = ScreenState.Main(checkProfile(app))
+                                        true
+                                    } else {
+                                        false
+                                    }
+                                },
+                                onCancel = { finish() }
+                            )
+                        }
+                        is ScreenState.Welcome -> {
                             WelcomeScreen(onFinished = { name, gender, age, hasPartner ->
                                 scope.launch(Dispatchers.IO) {
                                     val id = UUID.randomUUID().toString()
@@ -63,19 +75,94 @@ class MainActivity : ComponentActivity() {
                                             )
                                         }
                                         withContext(Dispatchers.Main) {
-                                            showWelcome = false
+                                            screenState = ScreenState.Main(true)
                                         }
                                     } catch (e: Exception) {
                                         e.printStackTrace()
                                     }
                                 }
                             })
-                        } else {
-                            MainScreen()
+                        }
+                        is ScreenState.Main -> {
+                            if (state.hasProfile) {
+                                MainScreen()
+                            } else {
+                                WelcomeScreen(onFinished = { name, gender, age, hasPartner ->
+                                    scope.launch(Dispatchers.IO) {
+                                        val id = UUID.randomUUID().toString()
+                                        try {
+                                            queries.transaction {
+                                                queries.deactivateAllProfiles()
+                                                queries.insertNewProfile(
+                                                    id = id,
+                                                    name = name,
+                                                    gender = gender.name,
+                                                    age = age.toLong(),
+                                                    has_partner = if (hasPartner) 1L else 0L,
+                                                    is_active = 1L
+                                                )
+                                            }
+                                            withContext(Dispatchers.Main) {
+                                                screenState = ScreenState.Main(true)
+                                            }
+                                        } catch (e: Exception) {
+                                            e.printStackTrace()
+                                        }
+                                    }
+                                })
+                            }
                         }
                     }
                 }
             }
         }
     }
+
+    private suspend fun checkSecurityAndShowScreen(app: ReleaselyApp): ScreenState {
+        val prefs = getSharedPreferences("security", Context.MODE_PRIVATE)
+        val decoyEnabled = prefs.getBoolean("decoy_enabled", false)
+        val appLockEnabled = prefs.getBoolean("app_lock_enabled", false)
+
+        if (decoyEnabled) {
+            return ScreenState.Decoy
+        }
+
+        if (appLockEnabled) {
+            return ScreenState.AppLock
+        }
+
+        return ScreenState.Main(checkProfile(app))
+    }
+
+    private fun checkProfile(app: ReleaselyApp): Boolean {
+        return try {
+            val count = app.profileQueries.countProfiles().executeAsOne()
+            count > 0
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    private fun hashPin(pin: String): String {
+        val bytes = MessageDigest.getInstance("SHA-256").digest(pin.toByteArray())
+        return bytes.joinToString("") { "%02x".format(it) }
+    }
+}
+
+sealed class ScreenState {
+    data object Loading : ScreenState()
+    data object Decoy : ScreenState()
+    data object AppLock : ScreenState()
+    data object Welcome : ScreenState()
+    data class Main(val hasProfile: Boolean) : ScreenState()
+}
+
+@Composable
+fun DecoyScreenComponent() {
+    top.foxmoe.releasely.components.DecoyScreen()
+}
+
+@Composable
+fun AppLockScreenComponent(onUnlock: (String) -> Boolean, onCancel: () -> Unit) {
+    top.foxmoe.releasely.components.AppLockScreen(onUnlock, onCancel)
 }
