@@ -80,7 +80,7 @@ fun SecuritySettingsScreen(
                 SecurityCard(
                     title = "界面伪装",
                     subtitle = "伪装成计算器应用",
-                    icon = Icons.Filled.Calculate,
+                    icon = Icons.Filled.Edit,
                     color = Color(0xFF9C27B0),
                     isEnabled = decoyEnabled,
                     onToggle = { enabled ->
@@ -95,7 +95,7 @@ fun SecuritySettingsScreen(
                 SecurityCard(
                     title = "一键销毁",
                     subtitle = "清除所有本地数据",
-                    icon = Icons.Filled.DeleteForever,
+                    icon = Icons.Filled.Delete,
                     color = Color(0xFFF44336),
                     isEnabled = false,
                     onToggle = {}
@@ -106,7 +106,7 @@ fun SecuritySettingsScreen(
                 SecurityCard(
                     title = "导出数据",
                     subtitle = "导出加密的备份文件",
-                    icon = Icons.Filled.Download,
+                    icon = Icons.Filled.Send,
                     color = Color(0xFF2196F3),
                     isEnabled = false,
                     onToggle = {}

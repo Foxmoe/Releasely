@@ -10,80 +10,80 @@ data class PartnerRecord(
     val name: String,
     val inviteCode: String,
     val status: String,
-    val sharedPermissions: String,
+    val sharedPermissions: String?,
     val createdAt: Long
 )
 
-class PartnerService(private val queries: top.foxmoe.releasely.database.AppDatabaseQueries) {
+class PartnerService(private val database: top.foxmoe.releasely.database.AppDatabase) {
 
     private val random = Random()
 
     suspend fun getAllPartners(): List<PartnerRecord> = withContext(Dispatchers.IO) {
-        queries.getAllPartners().executeAsList().map { row ->
+        database.partnerQueries.getAllPartners().executeAsList().map { row ->
             PartnerRecord(
                 id = row.id,
                 name = row.name,
-                inviteCode = row.inviteCode,
+                inviteCode = row.invite_code,
                 status = row.status,
-                sharedPermissions = row.sharedPermissions,
-                createdAt = row.createdAt
+                sharedPermissions = row.shared_permissions,
+                createdAt = row.created_at
             )
         }
     }
 
     suspend fun getPartnerById(id: String): PartnerRecord? = withContext(Dispatchers.IO) {
-        queries.getPartnerById(id).executeAsOneOrNull()?.let { row ->
+        database.partnerQueries.getPartnerById(id).executeAsOneOrNull()?.let { row ->
             PartnerRecord(
                 id = row.id,
                 name = row.name,
-                inviteCode = row.inviteCode,
+                inviteCode = row.invite_code,
                 status = row.status,
-                sharedPermissions = row.sharedPermissions,
-                createdAt = row.createdAt
+                sharedPermissions = row.shared_permissions,
+                createdAt = row.created_at
             )
         }
     }
 
     suspend fun getPartnerByInviteCode(inviteCode: String): PartnerRecord? =
         withContext(Dispatchers.IO) {
-            queries.getPartnerByInviteCode(inviteCode).executeAsOneOrNull()?.let { row ->
+            database.partnerQueries.getPartnerByInviteCode(inviteCode).executeAsOneOrNull()?.let { row ->
                 PartnerRecord(
                     id = row.id,
                     name = row.name,
-                    inviteCode = row.inviteCode,
+                    inviteCode = row.invite_code,
                     status = row.status,
-                    sharedPermissions = row.sharedPermissions,
-                    createdAt = row.createdAt
+                    sharedPermissions = row.shared_permissions,
+                    createdAt = row.created_at
                 )
             }
         }
 
     suspend fun insertPartner(name: String): String = withContext(Dispatchers.IO) {
         val id = UUID.randomUUID().toString()
-        val inviteCode = generateInviteCode()
-        queries.insertPartner(
+        val invite_code = generateInviteCode()
+        database.partnerQueries.insertPartner(
             id = id,
             name = name,
-            inviteCode = inviteCode
+            invite_code = invite_code
         )
         id
     }
 
     suspend fun updatePartnerStatus(id: String, status: String) = withContext(Dispatchers.IO) {
-        queries.updatePartnerStatus(status, id)
+        database.partnerQueries.updatePartnerStatus(status, id)
     }
 
     suspend fun updatePartnerPermissions(id: String, permissions: String) =
         withContext(Dispatchers.IO) {
-            queries.updatePartnerPermissions(permissions, id)
+            database.partnerQueries.updatePartnerPermissions(permissions, id)
         }
 
     suspend fun deletePartner(id: String) = withContext(Dispatchers.IO) {
-        queries.deletePartner(id)
+        database.partnerQueries.deletePartner(id)
     }
 
     suspend fun getPartnerCount(): Long = withContext(Dispatchers.IO) {
-        queries.countPartners().executeAsOne()
+        database.partnerQueries.countPartners().executeAsOne()
     }
 
     private fun generateInviteCode(): String {

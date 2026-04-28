@@ -17,10 +17,10 @@ data class ActivityRecord(
     val createdAt: Long
 )
 
-class ActivityService(private val queries: top.foxmoe.releasely.database.AppDatabaseQueries) {
+class ActivityService(private val database: top.foxmoe.releasely.database.AppDatabase) {
 
     suspend fun getAllActivities(): List<ActivityRecord> = withContext(Dispatchers.IO) {
-        queries.getAllActivities().executeAsList().map { row ->
+        database.activityQueries.getAllActivities().executeAsList().map { row ->
             ActivityRecord(
                 id = row.id,
                 date = row.date,
@@ -29,14 +29,14 @@ class ActivityService(private val queries: top.foxmoe.releasely.database.AppData
                 pleasure = row.pleasure?.toInt(),
                 mood = row.mood,
                 notes = row.notes?.let { decryptIfNeeded(it) },
-                partnerId = row.partnerId,
-                createdAt = row.createdAt
+                partnerId = row.partner_id,
+                createdAt = row.created_at
             )
         }
     }
 
     suspend fun getActivityById(id: String): ActivityRecord? = withContext(Dispatchers.IO) {
-        queries.getActivityById(id).executeAsOneOrNull()?.let { row ->
+        database.activityQueries.getActivityById(id).executeAsOneOrNull()?.let { row ->
             ActivityRecord(
                 id = row.id,
                 date = row.date,
@@ -45,8 +45,8 @@ class ActivityService(private val queries: top.foxmoe.releasely.database.AppData
                 pleasure = row.pleasure?.toInt(),
                 mood = row.mood,
                 notes = row.notes?.let { decryptIfNeeded(it) },
-                partnerId = row.partnerId,
-                createdAt = row.createdAt
+                partnerId = row.partner_id,
+                createdAt = row.created_at
             )
         }
     }
@@ -61,7 +61,7 @@ class ActivityService(private val queries: top.foxmoe.releasely.database.AppData
         partnerId: String?
     ): String = withContext(Dispatchers.IO) {
         val id = UUID.randomUUID().toString()
-        queries.insertActivity(
+        database.activityQueries.insertActivity(
             id = id,
             date = date,
             type = type,
@@ -69,7 +69,7 @@ class ActivityService(private val queries: top.foxmoe.releasely.database.AppData
             pleasure = pleasure?.toLong(),
             mood = mood,
             notes = notes?.let { LocalEncryptionManager.encrypt(it) },
-            partnerId = partnerId
+            partner_id = partnerId
         )
         id
     }
@@ -84,25 +84,25 @@ class ActivityService(private val queries: top.foxmoe.releasely.database.AppData
         notes: String?,
         partnerId: String?
     ) = withContext(Dispatchers.IO) {
-        queries.updateActivity(
+        database.activityQueries.updateActivity(
             date = date,
             type = type,
             protection = if (protection) 1L else 0L,
             pleasure = pleasure?.toLong(),
             mood = mood,
             notes = notes?.let { LocalEncryptionManager.encrypt(it) },
-            partnerId = partnerId,
+            partner_id = partnerId,
             id = id
         )
     }
 
     suspend fun deleteActivity(id: String) = withContext(Dispatchers.IO) {
-        queries.deleteActivity(id)
+        database.activityQueries.deleteActivity(id)
     }
 
     suspend fun getActivitiesByDateRange(startDate: Long, endDate: Long): List<ActivityRecord> =
         withContext(Dispatchers.IO) {
-            queries.getActivitiesByDateRange(startDate, endDate).executeAsList().map { row ->
+            database.activityQueries.getActivitiesByDateRange(startDate, endDate).executeAsList().map { row ->
                 ActivityRecord(
                     id = row.id,
                     date = row.date,
@@ -111,14 +111,14 @@ class ActivityService(private val queries: top.foxmoe.releasely.database.AppData
                     pleasure = row.pleasure?.toInt(),
                     mood = row.mood,
                     notes = row.notes?.let { decryptIfNeeded(it) },
-                    partnerId = row.partnerId,
-                    createdAt = row.createdAt
+                    partnerId = row.partner_id,
+                    createdAt = row.created_at
                 )
             }
         }
 
     suspend fun getActivityCount(): Long = withContext(Dispatchers.IO) {
-        queries.countActivities().executeAsOne()
+        database.activityQueries.countActivities().executeAsOne()
     }
 
     private fun decryptIfNeeded(value: String): String {

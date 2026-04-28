@@ -6,8 +6,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChevronLeft
-import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -50,7 +50,7 @@ fun CalendarView(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = { currentMonth = currentMonth.minusMonths(1) }) {
-                Icon(Icons.Filled.ChevronLeft, contentDescription = "上个月")
+                Icon(Icons.Filled.KeyboardArrowLeft, contentDescription = "上个月")
             }
             Text(
                 text = "${currentMonth.year}年${currentMonth.monthValue}月",
@@ -58,7 +58,7 @@ fun CalendarView(
                 fontWeight = FontWeight.Medium
             )
             IconButton(onClick = { currentMonth = currentMonth.plusMonths(1) }) {
-                Icon(Icons.Filled.ChevronRight, contentDescription = "下个月")
+                Icon(Icons.Filled.KeyboardArrowRight, contentDescription = "下个月")
             }
         }
 

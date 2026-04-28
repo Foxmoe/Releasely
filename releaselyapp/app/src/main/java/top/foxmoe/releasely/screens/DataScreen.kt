@@ -84,8 +84,7 @@ fun DataScreen() {
         // 根据选中 Tab 展示对应内容
         when (selectedTab) {
             0 -> ActivityTab(
-                onAddClick = { showActivityForm = true },
-                onMarkTaken = { /* 行为记录无需标记服用 */ }
+                onAddClick = { showActivityForm = true }
             )
             1 -> CycleTab(onAddClick = { showCycleForm = true })
             2 -> HealthTab(

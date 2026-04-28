@@ -14,32 +14,32 @@ data class MedicationRecord(
     val createdAt: Long
 )
 
-class MedicationService(private val queries: top.foxmoe.releasely.database.AppDatabaseQueries) {
+class MedicationService(private val database: top.foxmoe.releasely.database.AppDatabase) {
 
     suspend fun getAllMedications(): List<MedicationRecord> = withContext(Dispatchers.IO) {
-        queries.getAllMedications().executeAsList().map { row ->
+        database.medicationQueries.getAllMedications().executeAsList().map { row ->
             MedicationRecord(
                 id = row.id,
                 name = row.name,
                 dosage = row.dosage,
-                reminderTime = row.reminderTime,
-                lastTaken = row.lastTaken,
-                isActive = row.isActive == 1L,
-                createdAt = row.createdAt
+                reminderTime = row.reminder_time,
+                lastTaken = row.last_taken,
+                isActive = row.is_active == 1L,
+                createdAt = row.created_at
             )
         }
     }
 
     suspend fun getMedicationById(id: String): MedicationRecord? = withContext(Dispatchers.IO) {
-        queries.getMedicationById(id).executeAsOneOrNull()?.let { row ->
+        database.medicationQueries.getMedicationById(id).executeAsOneOrNull()?.let { row ->
             MedicationRecord(
                 id = row.id,
                 name = row.name,
                 dosage = row.dosage,
-                reminderTime = row.reminderTime,
-                lastTaken = row.lastTaken,
-                isActive = row.isActive == 1L,
-                createdAt = row.createdAt
+                reminderTime = row.reminder_time,
+                lastTaken = row.last_taken,
+                isActive = row.is_active == 1L,
+                createdAt = row.created_at
             )
         }
     }
@@ -50,11 +50,11 @@ class MedicationService(private val queries: top.foxmoe.releasely.database.AppDa
         reminderTime: Long
     ): String = withContext(Dispatchers.IO) {
         val id = UUID.randomUUID().toString()
-        queries.insertMedication(
+        database.medicationQueries.insertMedication(
             id = id,
             name = name,
             dosage = dosage,
-            reminderTime = reminderTime
+            reminder_time = reminderTime
         )
         id
     }
@@ -66,38 +66,38 @@ class MedicationService(private val queries: top.foxmoe.releasely.database.AppDa
         reminderTime: Long,
         lastTaken: Long?
     ) = withContext(Dispatchers.IO) {
-        queries.updateMedication(
+        database.medicationQueries.updateMedication(
             name = name,
             dosage = dosage,
-            reminderTime = reminderTime,
-            lastTaken = lastTaken,
+            reminder_time = reminderTime,
+            last_taken = lastTaken,
             id = id
         )
     }
 
     suspend fun deleteMedication(id: String) = withContext(Dispatchers.IO) {
-        queries.deleteMedication(id)
+        database.medicationQueries.deleteMedication(id)
     }
 
     suspend fun markTaken(id: String) = withContext(Dispatchers.IO) {
-        queries.markTaken(id)
+        database.medicationQueries.markTaken(id)
     }
 
     suspend fun getActiveMedications(): List<MedicationRecord> = withContext(Dispatchers.IO) {
-        queries.getActiveMedications().executeAsList().map { row ->
+        database.medicationQueries.getActiveMedications().executeAsList().map { row ->
             MedicationRecord(
                 id = row.id,
                 name = row.name,
                 dosage = row.dosage,
-                reminderTime = row.reminderTime,
-                lastTaken = row.lastTaken,
-                isActive = row.isActive == 1L,
-                createdAt = row.createdAt
+                reminderTime = row.reminder_time,
+                lastTaken = row.last_taken,
+                isActive = row.is_active == 1L,
+                createdAt = row.created_at
             )
         }
     }
 
     suspend fun getMedicationCount(): Long = withContext(Dispatchers.IO) {
-        queries.countMedications().executeAsOne()
+        database.medicationQueries.countMedications().executeAsOne()
     }
 }

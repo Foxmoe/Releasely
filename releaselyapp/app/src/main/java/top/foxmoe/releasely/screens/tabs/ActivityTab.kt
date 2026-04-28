@@ -6,6 +6,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -24,6 +25,7 @@ import top.foxmoe.releasely.utils.formatDate
 /**
  * 行为记录 Tab：展示亲密行为记录列表，支持添加新记录
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ActivityTab(onAddClick: () -> Unit) {
     val context = LocalContext.current

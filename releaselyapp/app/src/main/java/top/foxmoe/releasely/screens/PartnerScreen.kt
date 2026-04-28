@@ -5,7 +5,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -57,7 +60,7 @@ fun PartnerScreen(
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Icon(Icons.Filled.PersonAdd, contentDescription = null)
+                Icon(Icons.Filled.Add, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("添加伴侣")
             }
@@ -66,7 +69,7 @@ fun PartnerScreen(
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Icon(Icons.Filled.Mail, contentDescription = null)
+                Icon(Icons.Filled.Email, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("邀请绑定")
             }
@@ -81,7 +84,7 @@ fun PartnerScreen(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
-                        Icons.Filled.People,
+                        Icons.Filled.Person,
                         contentDescription = null,
                         modifier = Modifier.size(64.dp),
                         tint = Color.Gray
@@ -126,15 +129,8 @@ fun PartnerScreen(
     }
 }
 
-data class PartnerDisplayItem(
-    val id: String,
-    val name: String,
-    val inviteCode: String,
-    val status: String
-)
-
 @Composable
-fun PartnerCard(partner: PartnerDisplayItem) {
+fun PartnerCard(partner: top.foxmoe.releasely.screens.PartnerDisplayItem) {
     val statusColor = when (partner.status) {
         "connected" -> Color(0xFF4CAF50)
         "pending" -> Color(0xFFFF9800)

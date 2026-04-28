@@ -86,11 +86,9 @@ class SyncService(
                 put("userId", userId)
                 put("name", medication.name)
                 put("dosage", medication.dosage)
-                put("reminderTime", medication.reminderTime?.let {
-                    Instant.ofEpochSecond(it)
-                        .atZone(ZoneId.systemDefault())
-                        .toLocalDateTime().toString()
-                })
+                put("reminderTime", Instant.ofEpochSecond(medication.reminderTime)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDateTime().toString())
             }
             apiService.post("/medications", json.toString(), authToken)
         }
@@ -202,7 +200,7 @@ class SyncService(
                     medicationService.insertMedication(
                         name = item.optString("name", ""),
                         dosage = item.optString("dosage", ""),
-                        reminderTime = reminderTime
+                        reminderTime = reminderTime ?: 0L
                     )
                 }
             }

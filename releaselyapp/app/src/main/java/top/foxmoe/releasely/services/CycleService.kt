@@ -13,30 +13,30 @@ data class CycleRecord(
     val createdAt: Long
 )
 
-class CycleService(private val queries: top.foxmoe.releasely.database.AppDatabaseQueries) {
+class CycleService(private val database: top.foxmoe.releasely.database.AppDatabase) {
 
     suspend fun getAllCycles(): List<CycleRecord> = withContext(Dispatchers.IO) {
-        queries.getAllCycles().executeAsList().map { row ->
+        database.cycleQueries.getAllCycles().executeAsList().map { row ->
             CycleRecord(
                 id = row.id,
-                startDate = row.startDate,
+                startDate = row.start_date,
                 duration = row.duration?.toInt(),
-                predictedNext = row.predictedNext,
-                isDeleted = row.isDeleted == 1L,
-                createdAt = row.createdAt
+                predictedNext = row.predicted_next,
+                isDeleted = row.is_deleted == 1L,
+                createdAt = row.created_at
             )
         }
     }
 
     suspend fun getCycleById(id: String): CycleRecord? = withContext(Dispatchers.IO) {
-        queries.getCycleById(id).executeAsOneOrNull()?.let { row ->
+        database.cycleQueries.getCycleById(id).executeAsOneOrNull()?.let { row ->
             CycleRecord(
                 id = row.id,
-                startDate = row.startDate,
+                startDate = row.start_date,
                 duration = row.duration?.toInt(),
-                predictedNext = row.predictedNext,
-                isDeleted = row.isDeleted == 1L,
-                createdAt = row.createdAt
+                predictedNext = row.predicted_next,
+                isDeleted = row.is_deleted == 1L,
+                createdAt = row.created_at
             )
         }
     }
@@ -44,44 +44,44 @@ class CycleService(private val queries: top.foxmoe.releasely.database.AppDatabas
     suspend fun insertCycle(startDate: Long, duration: Int?, predictedNext: Long?): String =
         withContext(Dispatchers.IO) {
             val id = UUID.randomUUID().toString()
-            queries.insertCycle(
+            database.cycleQueries.insertCycle(
                 id = id,
-                startDate = startDate,
+                start_date = startDate,
                 duration = duration?.toLong(),
-                predictedNext = predictedNext
+                predicted_next = predictedNext
             )
             id
         }
 
     suspend fun updateCycle(id: String, startDate: Long, duration: Int?, predictedNext: Long?) =
         withContext(Dispatchers.IO) {
-            queries.updateCycle(
-                startDate = startDate,
+            database.cycleQueries.updateCycle(
+                start_date = startDate,
                 duration = duration?.toLong(),
-                predictedNext = predictedNext,
+                predicted_next = predictedNext,
                 id = id
             )
         }
 
     suspend fun deleteCycle(id: String) = withContext(Dispatchers.IO) {
-        queries.deleteCycle(id)
+        database.cycleQueries.deleteCycle(id)
     }
 
     suspend fun getLatestCycle(): CycleRecord? = withContext(Dispatchers.IO) {
-        queries.getLatestCycle().executeAsOneOrNull()?.let { row ->
+        database.cycleQueries.getLatestCycle().executeAsOneOrNull()?.let { row ->
             CycleRecord(
                 id = row.id,
-                startDate = row.startDate,
+                startDate = row.start_date,
                 duration = row.duration?.toInt(),
-                predictedNext = row.predictedNext,
-                isDeleted = row.isDeleted == 1L,
-                createdAt = row.createdAt
+                predictedNext = row.predicted_next,
+                isDeleted = row.is_deleted == 1L,
+                createdAt = row.created_at
             )
         }
     }
 
     suspend fun getCycleCount(): Long = withContext(Dispatchers.IO) {
-        queries.countCycles().executeAsOne()
+        database.cycleQueries.countCycles().executeAsOne()
     }
 
     suspend fun predictNextPeriod(): Long? = withContext(Dispatchers.IO) {

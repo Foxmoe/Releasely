@@ -6,6 +6,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -27,6 +28,7 @@ import java.time.ZoneId
 /**
  * 周期记录 Tab：展示日历视图和月经周期历史记录
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CycleTab(onAddClick: () -> Unit) {
     val context = LocalContext.current

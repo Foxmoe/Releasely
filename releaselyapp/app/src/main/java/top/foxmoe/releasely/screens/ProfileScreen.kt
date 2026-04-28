@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -38,10 +39,10 @@ fun ProfileScreen() {
     val menuItems = remember {
         listOf(
             MenuItem("个人资料", Icons.Filled.Person, Color(0xFF2196F3)),
-            MenuItem("伴侣管理", Icons.Filled.People, Color(0xFF9C27B0)),
+            MenuItem("伴侣管理", Icons.Filled.Person, Color(0xFF9C27B0)),
             MenuItem("安全设置", Icons.Filled.Lock, Color(0xFFFF9800)),
             MenuItem("通知设置", Icons.Filled.Notifications, Color(0xFFE91E63)),
-            MenuItem("隐私设置", Icons.Filled.Security, Color(0xFF607D8B)),
+            MenuItem("隐私设置", Icons.Filled.Lock, Color(0xFF607D8B)),
             MenuItem("关于", Icons.Filled.Info, Color(0xFF9E9E9E)),
             MenuItem("退出登录", Icons.Filled.ExitToApp, Color(0xFFF44336))
         )
@@ -171,6 +172,7 @@ data class PartnerDisplayItem(
 /**
  * 菜单列表项组件，带图标、标题和右箭头
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MenuListItem(
     menuItem: MenuItem,
@@ -204,7 +206,7 @@ fun MenuListItem(
                 )
             }
             Icon(
-                imageVector = Icons.Filled.ChevronRight,
+                imageVector = Icons.Filled.KeyboardArrowRight,
                 contentDescription = null,
                 tint = Color.Gray,
                 modifier = Modifier.size(20.dp)

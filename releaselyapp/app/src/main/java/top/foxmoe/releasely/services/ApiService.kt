@@ -24,7 +24,7 @@ class ApiService {
 
     private val baseUrl = "http://10.0.2.2:8080/api"
 
-    suspend fun <T> get(endpoint: String, token: String? = null): Result<String> =
+    suspend fun get(endpoint: String, token: String? = null): Result<String> =
         withContext(Dispatchers.IO) {
             try {
                 val request = Request.Builder()
@@ -46,7 +46,7 @@ class ApiService {
             }
         }
 
-    suspend fun <T> post(endpoint: String, json: String, token: String? = null): Result<String> =
+    suspend fun post(endpoint: String, json: String, token: String? = null): Result<String> =
         withContext(Dispatchers.IO) {
             try {
                 val request = Request.Builder()
@@ -69,7 +69,7 @@ class ApiService {
             }
         }
 
-    suspend fun <T> put(endpoint: String, json: String, token: String? = null): Result<String> =
+    suspend fun put(endpoint: String, json: String, token: String? = null): Result<String> =
         withContext(Dispatchers.IO) {
             try {
                 val request = Request.Builder()
@@ -92,7 +92,7 @@ class ApiService {
             }
         }
 
-    suspend fun <T> delete(endpoint: String, token: String? = null): Result<String> =
+    suspend fun delete(endpoint: String, token: String? = null): Result<String> =
         withContext(Dispatchers.IO) {
             try {
                 val request = Request.Builder()

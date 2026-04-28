@@ -3,11 +3,13 @@ package top.foxmoe.releasely.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -32,11 +34,11 @@ fun ToolsScreen() {
     val tools = remember {
         listOf(
             ToolItem("月经周期计算", Icons.Filled.DateRange, Color(0xFFE91E63)),
-            ToolItem("安全期计算", Icons.Filled.Security, Color(0xFF9C27B0)),
+            ToolItem("安全期计算", Icons.Filled.Lock, Color(0xFF9C27B0)),
             ToolItem("排卵期计算", Icons.Filled.Favorite, Color(0xFFE91E63)),
             ToolItem("药物提醒", Icons.Filled.Notifications, Color(0xFFFF9800)),
-            ToolItem("健康报告", Icons.Filled.Assessment, Color(0xFF4CAF50)),
-            ToolItem("数据导出", Icons.Filled.Download, Color(0xFF2196F3))
+            ToolItem("健康报告", Icons.Filled.Info, Color(0xFF4CAF50)),
+            ToolItem("数据导出", Icons.Filled.Send, Color(0xFF2196F3))
         )
     }
 
@@ -90,6 +92,7 @@ data class ToolItem(
 /**
  * 工具卡片组件，带图标和标题
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ToolCard(
     tool: ToolItem,

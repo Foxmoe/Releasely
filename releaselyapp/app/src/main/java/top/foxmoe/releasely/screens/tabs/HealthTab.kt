@@ -5,7 +5,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -28,6 +31,7 @@ import top.foxmoe.releasely.utils.formatTime
 /**
  * 健康/用药 Tab：展示用药提醒列表，支持标记已服用和添加新药物
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HealthTab(onAddClick: () -> Unit, onMarkTaken: (String) -> Unit) {
     val context = LocalContext.current
@@ -115,7 +119,7 @@ private fun HealthReminderCard(count: Int) {
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    imageVector = Icons.Filled.Notifications,
+                    imageVector = Icons.Filled.Email,
                     contentDescription = null,
                     tint = Color(0xFFFF9800),
                     modifier = Modifier.size(24.dp)
@@ -136,7 +140,7 @@ private fun HealthReminderCard(count: Int) {
                 }
             }
             Icon(
-                imageVector = Icons.Filled.ChevronRight,
+                imageVector = Icons.Filled.KeyboardArrowRight,
                 contentDescription = null,
                 tint = Color.Gray
             )
