@@ -38,5 +38,20 @@ class ReleaselyApp : Application() {
         syncService = SyncService(apiService, activityService, cycleService, medicationService, partnerService)
         securitySettingsService = SecuritySettingsService(applicationContext, apiService)
     }
+
+    /** 获取当前激活的用户资料，返回 null 表示未设置 */
+    fun getActiveProfile(): top.foxmoe.releasely.database.Profile? {
+        return try {
+            profileQueries.getActiveProfile().executeAsOneOrNull()
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    /** 判断当前用户是否为女性（只有女性显示月经/周期相关功能） */
+    fun isFemale(): Boolean {
+        val profile = getActiveProfile()
+        return profile?.gender == "Ms"
+    }
 }
 

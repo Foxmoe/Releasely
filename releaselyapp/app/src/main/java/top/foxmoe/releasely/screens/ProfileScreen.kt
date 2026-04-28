@@ -35,49 +35,74 @@ fun ProfileScreen() {
     val context = LocalContext.current
     var showPartnerScreen by remember { mutableStateOf(false) }
     var showSecurityScreen by remember { mutableStateOf(false) }
+    var showPersonalProfile by remember { mutableStateOf(false) }
+    var showNotificationSettings by remember { mutableStateOf(false) }
+    var showPrivacySettings by remember { mutableStateOf(false) }
+    var showAbout by remember { mutableStateOf(false) }
+
+    // 子页面导航栈处理
+    when {
+        showPartnerScreen -> {
+            val partners = remember { mutableStateOf<List<PartnerDisplayItem>>(emptyList()) }
+            LaunchedEffect(Unit) {
+                val app = context.applicationContext as ReleaselyApp
+                partners.value = app.partnerService.getAllPartners().map {
+                    PartnerDisplayItem(it.id, it.name, it.inviteCode, it.status)
+                }
+            }
+            PartnerScreen(
+                partners = partners.value,
+                onAddPartner = { name ->
+                    GlobalScope.launch(Dispatchers.IO) {
+                        val app = context.applicationContext as ReleaselyApp
+                        app.partnerService.insertPartner(name)
+                    }
+                },
+                onInvitePartner = { /* TODO: 处理伴侣邀请码 */ },
+                onBack = { showPartnerScreen = false }
+            )
+            return
+        }
+
+        showSecurityScreen -> {
+            SecuritySettingsScreen(
+                onBack = { showSecurityScreen = false },
+                onDecoyNavigate = { /* TODO: 伪装模式导航 */ }
+            )
+            return
+        }
+
+        showPersonalProfile -> {
+            PersonalProfileScreen(onBack = { showPersonalProfile = false })
+            return
+        }
+
+        showNotificationSettings -> {
+            NotificationSettingsScreen(onBack = { showNotificationSettings = false })
+            return
+        }
+
+        showPrivacySettings -> {
+            PrivacySettingsScreen(onBack = { showPrivacySettings = false })
+            return
+        }
+
+        showAbout -> {
+            AboutScreen(onBack = { showAbout = false })
+            return
+        }
+    }
 
     val menuItems = remember {
         listOf(
             MenuItem("个人资料", Icons.Filled.Person, Color(0xFF2196F3)),
-            MenuItem("伴侣管理", Icons.Filled.Person, Color(0xFF9C27B0)),
+            MenuItem("伴侣管理", Icons.Filled.Favorite, Color(0xFF9C27B0)),
             MenuItem("安全设置", Icons.Filled.Lock, Color(0xFFFF9800)),
             MenuItem("通知设置", Icons.Filled.Notifications, Color(0xFFE91E63)),
-            MenuItem("隐私设置", Icons.Filled.Lock, Color(0xFF607D8B)),
+            MenuItem("隐私设置", Icons.Filled.Edit, Color(0xFF607D8B)),
             MenuItem("关于", Icons.Filled.Info, Color(0xFF9E9E9E)),
             MenuItem("退出登录", Icons.Filled.ExitToApp, Color(0xFFF44336))
         )
-    }
-
-    // 伴侣管理子页面
-    if (showPartnerScreen) {
-        val partners = remember { mutableStateOf<List<PartnerDisplayItem>>(emptyList()) }
-        LaunchedEffect(Unit) {
-            val app = context.applicationContext as ReleaselyApp
-            partners.value = app.partnerService.getAllPartners().map {
-                PartnerDisplayItem(it.id, it.name, it.inviteCode, it.status)
-            }
-        }
-        top.foxmoe.releasely.screens.PartnerScreen(
-            partners = partners.value,
-            onAddPartner = { name ->
-                GlobalScope.launch(Dispatchers.IO) {
-                    val app = context.applicationContext as ReleaselyApp
-                    app.partnerService.insertPartner(name)
-                }
-            },
-            onInvitePartner = { /* TODO: 处理伴侣邀请码 */ },
-            onBack = { showPartnerScreen = false }
-        )
-        return
-    }
-
-    // 安全设置子页面
-    if (showSecurityScreen) {
-        top.foxmoe.releasely.screens.SecuritySettingsScreen(
-            onBack = { showSecurityScreen = false },
-            onDecoyNavigate = { /* TODO: 伪装模式导航 */ }
-        )
-        return
     }
 
     LazyColumn(
@@ -99,9 +124,15 @@ fun ProfileScreen() {
                 menuItem = menuItem,
                 onClick = {
                     when (menuItem.title) {
+                        "个人资料" -> showPersonalProfile = true
                         "伴侣管理" -> showPartnerScreen = true
                         "安全设置" -> showSecurityScreen = true
-                        // TODO: 其他菜单项的页面跳转
+                        "通知设置" -> showNotificationSettings = true
+                        "隐私设置" -> showPrivacySettings = true
+                        "关于" -> showAbout = true
+                        "退出登录" -> {
+                            // TODO: 清除登录状态并跳转
+                        }
                     }
                 }
             )
@@ -110,10 +141,21 @@ fun ProfileScreen() {
 }
 
 /**
- * 用户资料头部，展示头像占位和基本信息
+ * 用户资料头部，展示头像和真实用户信息
  */
 @Composable
 fun ProfileHeader() {
+    val context = LocalContext.current
+    val app = context.applicationContext as ReleaselyApp
+    var userName by remember { mutableStateOf("用户") }
+    var recordDays by remember { mutableStateOf(0) }
+
+    LaunchedEffect(Unit) {
+        val profile = app.getActiveProfile()
+        userName = profile?.name ?: "用户"
+        recordDays = app.activityService.getActivityCount().toInt()
+    }
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
@@ -126,7 +168,7 @@ fun ProfileHeader() {
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "用",
+                text = userName.take(1).ifEmpty { "用" },
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
@@ -135,14 +177,14 @@ fun ProfileHeader() {
         Spacer(modifier = Modifier.width(16.dp))
         Column {
             Text(
-                text = "用户名",
+                text = userName,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Medium,
                 color = Color.Black
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "已记录 0 天",
+                text = "已记录 $recordDays 天",
                 fontSize = 14.sp,
                 color = Color.Gray
             )

@@ -31,19 +31,25 @@ import top.foxmoe.releasely.screens.tabs.CycleTab
 import top.foxmoe.releasely.screens.tabs.HealthTab
 
 /**
- * 数据记录页：包含行为、周期、健康三个子 Tab，支持添加各类记录
+ * 数据记录页：包含行为、周期（仅限女性）、健康三个子 Tab，支持添加各类记录
+ * 男性用户不显示周期 Tab
  */
 @Composable
 fun DataScreen() {
     val context = LocalContext.current
     val app = context.applicationContext as ReleaselyApp
+    val isFemale = remember { app.isFemale() }
 
     var selectedTab by remember { mutableIntStateOf(0) }
     var showActivityForm by remember { mutableStateOf(false) }
     var showCycleForm by remember { mutableStateOf(false) }
     var showMedicationForm by remember { mutableStateOf(false) }
 
-    val tabs = listOf("行为", "周期", "健康")
+    val tabs = if (isFemale) {
+        listOf("行为", "周期", "健康")
+    } else {
+        listOf("行为", "健康")
+    }
 
     Column(
         modifier = Modifier
@@ -82,12 +88,13 @@ fun DataScreen() {
         Spacer(modifier = Modifier.height(16.dp))
 
         // 根据选中 Tab 展示对应内容
-        when (selectedTab) {
-            0 -> ActivityTab(
+        when {
+            selectedTab == 0 -> ActivityTab(
                 onAddClick = { showActivityForm = true }
             )
-            1 -> CycleTab(onAddClick = { showCycleForm = true })
-            2 -> HealthTab(
+            isFemale && selectedTab == 1 -> CycleTab(onAddClick = { showCycleForm = true })
+            // 女性：健康是 tab 2；男性：健康是 tab 1
+            (isFemale && selectedTab == 2) || (!isFemale && selectedTab == 1) -> HealthTab(
                 onAddClick = { showMedicationForm = true },
                 onMarkTaken = { /* 服用逻辑已在 HealthTab 内处理 */ }
             )
@@ -115,8 +122,8 @@ fun DataScreen() {
         )
     }
 
-    // 周期记录添加弹窗
-    if (showCycleForm) {
+    // 周期记录添加弹窗（仅女性）
+    if (showCycleForm && isFemale) {
         AlertDialog(
             onDismissRequest = { showCycleForm = false },
             confirmButton = {},

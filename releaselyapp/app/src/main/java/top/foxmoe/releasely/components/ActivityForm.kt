@@ -11,7 +11,7 @@ import androidx.compose.ui.unit.sp
 import java.time.LocalDate
 import java.time.ZoneId
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun ActivityForm(
     onSubmit: (date: Long, type: String, protection: Boolean, pleasure: Int?, mood: String?, notes: String?) -> Unit,
@@ -25,8 +25,11 @@ fun ActivityForm(
     var selectedMood by remember { mutableStateOf("愉悦") }
     var notes by remember { mutableStateOf("") }
 
-    val types = listOf("亲密行为", "月经", "排卵", "其他")
-    val moods = listOf("愉悦", "一般", "不适")
+    val types = listOf(
+        "亲密行为", "自慰", "口交", "肛交", "边缘行为",
+        "月经开始", "月经结束", "排卵日", "身体不适", "其他"
+    )
+    val moods = listOf("愉悦", "放松", "一般", "疲惫", "不适")
 
     Column(
         modifier = Modifier
@@ -41,7 +44,7 @@ fun ActivityForm(
         )
 
         Text("类型", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             types.forEach { type ->
                 FilterChip(
                     selected = selectedType == type,
@@ -74,7 +77,7 @@ fun ActivityForm(
         )
 
         Text("心情", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             moods.forEach { mood ->
                 FilterChip(
                     selected = selectedMood == mood,

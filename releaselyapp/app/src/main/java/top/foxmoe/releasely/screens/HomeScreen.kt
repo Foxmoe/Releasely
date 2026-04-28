@@ -19,32 +19,50 @@ import top.foxmoe.releasely.ReleaselyApp
 
 /**
  * 首页：展示用户问候语、今日概览统计卡片和最近记录入口
+ * 根据用户性别动态展示不同统计项（女性显示周期，男性显示其他健康指标）
  */
 @Composable
 fun HomeScreen() {
     val context = LocalContext.current
     val app = context.applicationContext as ReleaselyApp
+    val isFemale = remember { app.isFemale() }
 
     // 统计数据状态
     var activityCount by remember { mutableIntStateOf(0) }
     var cycleDay by remember { mutableIntStateOf(0) }
     var cyclePhase by remember { mutableStateOf("") }
     var protectionRate by remember { mutableStateOf("0%") }
+    var userName by remember { mutableStateOf("用户") }
 
     // 加载统计数据
     LaunchedEffect(Unit) {
         activityCount = app.activityService.getActivityCount().toInt()
-        val latestCycle = app.cycleService.getLatestCycle()
-        if (latestCycle != null) {
-            val now = System.currentTimeMillis() / 1000
-            val daysSinceStart = ((now - latestCycle.startDate) / (24 * 60 * 60)).toInt()
-            cycleDay = daysSinceStart
-            cyclePhase = when {
-                daysSinceStart < 5 -> "月经期"
-                daysSinceStart < 14 -> "卵泡期"
-                daysSinceStart < 21 -> "排卵期"
-                else -> "黄体期"
+        val profile = app.getActiveProfile()
+        userName = profile?.name ?: "用户"
+
+        if (isFemale) {
+            val latestCycle = app.cycleService.getLatestCycle()
+            if (latestCycle != null) {
+                val now = System.currentTimeMillis() / 1000
+                val daysSinceStart = ((now - latestCycle.startDate) / (24 * 60 * 60)).toInt()
+                cycleDay = daysSinceStart
+                cyclePhase = when {
+                    daysSinceStart < 5 -> "月经期"
+                    daysSinceStart < 14 -> "卵泡期"
+                    daysSinceStart < 21 -> "排卵期"
+                    else -> "黄体期"
+                }
             }
+        }
+
+        // 计算本月保护率
+        val now = System.currentTimeMillis() / 1000
+        val startOfMonth = now - (now % (30 * 24 * 60 * 60))
+        val monthActivities = app.activityService.getActivitiesByDateRange(startOfMonth, now)
+        if (monthActivities.isNotEmpty()) {
+            val protectedCount = monthActivities.count { it.protection }
+            val rate = (protectedCount * 100 / monthActivities.size)
+            protectionRate = "$rate%"
         }
     }
 
@@ -67,7 +85,7 @@ fun HomeScreen() {
         // 问候语区域
         item {
             Text(
-                text = greeting,
+                text = "$greeting，$userName",
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Light,
                 color = Color.Black
@@ -91,19 +109,29 @@ fun HomeScreen() {
             )
         }
 
-        // 统计卡片第一行：周期天数 + 亲密次数
+        // 统计卡片第一行
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                StatCard(
-                    title = "周期天数",
-                    value = if (cycleDay > 0) "Day $cycleDay" else "-",
-                    subtitle = cyclePhase.ifEmpty { "未记录" },
-                    color = Color(0xFFE3F2FD),
-                    modifier = Modifier.weight(1f)
-                )
+                if (isFemale) {
+                    StatCard(
+                        title = "周期天数",
+                        value = if (cycleDay > 0) "Day $cycleDay" else "-",
+                        subtitle = cyclePhase.ifEmpty { "未记录" },
+                        color = Color(0xFFE3F2FD),
+                        modifier = Modifier.weight(1f)
+                    )
+                } else {
+                    StatCard(
+                        title = "健康指数",
+                        value = if (activityCount > 0) "良好" else "-",
+                        subtitle = "基于记录",
+                        color = Color(0xFFE3F2FD),
+                        modifier = Modifier.weight(1f)
+                    )
+                }
                 StatCard(
                     title = "亲密次数",
                     value = activityCount.toString(),
@@ -151,10 +179,6 @@ fun HomeScreen() {
                     fontWeight = FontWeight.Medium,
                     color = Color.Black
                 )
-                // TODO: 跳转至全部记录列表
-                /*TextButton(onClick = { }) {
-                    Text("查看全部", color = Color.Gray)
-                }*/
             }
         }
     }

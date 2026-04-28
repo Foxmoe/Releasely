@@ -23,19 +23,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import top.foxmoe.releasely.ReleaselyApp
 import top.foxmoe.releasely.utils.formatTime
 
 /**
  * 健康/用药 Tab：展示用药提醒列表，支持标记已服用和添加新药物
+ * 点击服用后立即刷新 UI，避免延迟
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HealthTab(onAddClick: () -> Unit, onMarkTaken: (String) -> Unit) {
     val context = LocalContext.current
     val app = context.applicationContext as ReleaselyApp
+    val scope = rememberCoroutineScope()
 
     var medications by remember { mutableStateOf<List<top.foxmoe.releasely.services.MedicationRecord>>(emptyList()) }
 
@@ -48,7 +50,7 @@ fun HealthTab(onAddClick: () -> Unit, onMarkTaken: (String) -> Unit) {
     ) {
         // 用药提醒概览卡片
         item {
-            HealthReminderCard(count = medications.size)
+            HealthReminderCard(count = medications.count { it.lastTaken == null })
         }
 
         // 添加药物按钮
@@ -91,8 +93,13 @@ fun HealthTab(onAddClick: () -> Unit, onMarkTaken: (String) -> Unit) {
                 nextTime = formatTime(medication.reminderTime),
                 taken = medication.lastTaken != null,
                 onTakenClick = {
-                    GlobalScope.launch(Dispatchers.IO) {
-                        app.medicationService.markTaken(medication.id)
+                    scope.launch {
+                        withContext(Dispatchers.IO) {
+                            app.medicationService.markTaken(medication.id)
+                        }
+                        // 立即刷新列表，消除延迟感
+                        medications = app.medicationService.getAllMedications()
+                        onMarkTaken(medication.id)
                     }
                 }
             )
