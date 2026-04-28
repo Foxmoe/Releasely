@@ -5,11 +5,15 @@ import org.springframework.web.bind.annotation.*
 import top.foxmoe.releasely.dto.*
 import top.foxmoe.releasely.entity.ActivityRecord
 import top.foxmoe.releasely.mapper.ActivityRecordMapper
+import top.foxmoe.releasely.service.EncryptionService
 import java.time.LocalDateTime
 
 @RestController
 @RequestMapping("/api/activity")
-class ActivityController(private val activityMapper: ActivityRecordMapper) {
+class ActivityController(
+    private val activityMapper: ActivityRecordMapper,
+    private val encryptionService: EncryptionService
+) {
 
     @GetMapping("/list")
     fun list(@RequestParam userId: Long): ResponseEntity<ApiResponse<ActivityListResponse>> {
@@ -36,6 +40,7 @@ class ActivityController(private val activityMapper: ActivityRecordMapper) {
             pleasureRating = request.pleasureRating,
             healthStatus = request.healthStatus,
             occurredAt = request.occurredAt ?: LocalDateTime.now(),
+            encryptedNotes = request.notes?.let { encryptionService.encrypt(it) },
             isDeleted = false,
             createdAt = LocalDateTime.now()
         )
@@ -53,6 +58,7 @@ class ActivityController(private val activityMapper: ActivityRecordMapper) {
         request.pleasureRating?.let { record.pleasureRating = it }
         request.healthStatus?.let { record.healthStatus = it }
         request.occurredAt?.let { record.occurredAt = it }
+        request.notes?.let { record.encryptedNotes = encryptionService.encrypt(it) }
 
         activityMapper.updateById(record)
         return ResponseEntity.ok(ApiResponse.success(record.toDto()))
@@ -75,6 +81,7 @@ class ActivityController(private val activityMapper: ActivityRecordMapper) {
         pleasureRating = pleasureRating,
         healthStatus = healthStatus,
         occurredAt = occurredAt,
+        notes = encryptedNotes?.let { encryptionService.decrypt(it) },
         createdAt = createdAt
     )
 }

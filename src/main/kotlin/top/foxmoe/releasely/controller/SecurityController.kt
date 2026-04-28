@@ -90,6 +90,41 @@ class SecurityController(private val securityService: SecurityService) {
         }
     }
 
+    @PostMapping("/2fa/setup")
+    fun setup2FA(@RequestBody request: Setup2FARequest): ResponseEntity<ApiResponse<TwoFactorSetupResponse>> {
+        val result = securityService.setup2FA(request.userId, request.username)
+        return ResponseEntity.ok(ApiResponse.success(TwoFactorSetupResponse(
+            secret = result.secret,
+            qrCodeUrl = result.qrCodeUrl
+        )))
+    }
+
+    @PostMapping("/2fa/enable")
+    fun enable2FA(@RequestBody request: Enable2FARequest): ResponseEntity<ApiResponse<String>> {
+        val success = securityService.enable2FA(request.userId, request.code)
+        return if (success) {
+            ResponseEntity.ok(ApiResponse.success("2FA enabled successfully"))
+        } else {
+            ResponseEntity.ok(ApiResponse.error(ResultCode.VALIDATE_FAILED))
+        }
+    }
+
+    @PostMapping("/2fa/disable")
+    fun disable2FA(@RequestBody request: Disable2FARequest): ResponseEntity<ApiResponse<String>> {
+        val success = securityService.disable2FA(request.userId)
+        return if (success) {
+            ResponseEntity.ok(ApiResponse.success("2FA disabled successfully"))
+        } else {
+            ResponseEntity.ok(ApiResponse.error(ResultCode.NOT_FOUND))
+        }
+    }
+
+    @PostMapping("/2fa/verify")
+    fun verify2FA(@RequestBody request: TwoFactorVerifyRequest): ResponseEntity<ApiResponse<Boolean>> {
+        val valid = securityService.verify2FA(request.userId, request.code)
+        return ResponseEntity.ok(ApiResponse.success(valid))
+    }
+
     private fun SecuritySettings.toDto() = SecuritySettingsDto(
         id = id,
         userId = userId,

@@ -13,6 +13,7 @@ import top.foxmoe.releasely.dto.*
 import top.foxmoe.releasely.entity.User
 import top.foxmoe.releasely.mapper.UserMapper
 import top.foxmoe.releasely.security.JwtTokenProvider
+import top.foxmoe.releasely.service.SecurityService
 import java.time.LocalDateTime
 
 @RestController
@@ -21,7 +22,8 @@ class AuthController(
     private val authenticationManager: AuthenticationManager,
     private val userMapper: UserMapper,
     private val passwordEncoder: PasswordEncoder,
-    private val jwtTokenProvider: JwtTokenProvider
+    private val jwtTokenProvider: JwtTokenProvider,
+    private val securityService: SecurityService
 ) {
 
     @PostMapping("/login")
@@ -31,12 +33,45 @@ class AuthController(
                 UsernamePasswordAuthenticationToken(request.username, request.password)
             )
             SecurityContextHolder.getContext().authentication = authentication
-            val token = jwtTokenProvider.createToken(request.username)
+
             val user = userMapper.selectByMap(mapOf("username" to request.username)).firstOrNull()
-            ResponseEntity.ok(ApiResponse.success(AuthResponse(token, user?.username ?: request.username)))
+                ?: return ResponseEntity.ok(ApiResponse.error(ResultCode.USER_NOT_FOUND))
+
+            val settings = securityService.getOrCreateSettings(user.id!!)
+            if (settings.is2FAEnabled) {
+                val preAuthToken = jwtTokenProvider.createPreAuthToken(request.username)
+                return ResponseEntity.ok(ApiResponse.success(
+                    AuthResponse(token = preAuthToken, username = request.username, requires2FA = true)
+                ))
+            }
+
+            val token = jwtTokenProvider.createToken(request.username)
+            ResponseEntity.ok(ApiResponse.success(AuthResponse(token, user.username ?: request.username)))
         } catch (e: Exception) {
             ResponseEntity.ok(ApiResponse.error(ResultCode.PASSWORD_ERROR))
         }
+    }
+
+    @PostMapping("/2fa/verify")
+    fun verify2FA(@RequestBody request: TwoFactorLoginRequest): ResponseEntity<ApiResponse<AuthResponse>> {
+        if (!jwtTokenProvider.validateToken(request.preAuthToken)) {
+            return ResponseEntity.ok(ApiResponse.error(ResultCode.TOKEN_INVALID))
+        }
+        if (!jwtTokenProvider.isPreAuthToken(request.preAuthToken)) {
+            return ResponseEntity.ok(ApiResponse.error(ResultCode.TOKEN_INVALID))
+        }
+
+        val username = jwtTokenProvider.getUsername(request.preAuthToken)
+        val user = userMapper.selectByMap(mapOf("username" to username)).firstOrNull()
+            ?: return ResponseEntity.ok(ApiResponse.error(ResultCode.USER_NOT_FOUND))
+
+        val settings = securityService.getOrCreateSettings(user.id!!)
+        if (!settings.is2FAEnabled || securityService.verify2FA(user.id!!, request.totpCode)) {
+            val token = jwtTokenProvider.createToken(username)
+            return ResponseEntity.ok(ApiResponse.success(AuthResponse(token, username)))
+        }
+
+        return ResponseEntity.ok(ApiResponse.error(ResultCode.`2FA_REQUIRED`))
     }
 
     @PostMapping("/register")
@@ -53,7 +88,7 @@ class AuthController(
             updatedAt = LocalDateTime.now()
         )
         userMapper.insert(user)
+        securityService.createDefaultSettings(user.id!!)
         return ResponseEntity.ok(ApiResponse.success("User registered successfully"))
     }
 }
-

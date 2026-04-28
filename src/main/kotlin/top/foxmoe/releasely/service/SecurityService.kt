@@ -10,7 +10,8 @@ import java.time.LocalDateTime
 @Service
 class SecurityService(
     private val securitySettingsMapper: SecuritySettingsMapper,
-    private val passwordEncoder: PasswordEncoder
+    private val passwordEncoder: PasswordEncoder,
+    private val totpService: TotpService
 ) {
 
     companion object {
@@ -123,6 +124,44 @@ class SecurityService(
         settings.lockedUntil = null
         return updateSettings(settings)
     }
+
+    fun setup2FA(userId: Long, username: String): TwoFactorSetupResult {
+        val settings = getOrCreateSettings(userId)
+        val secret = totpService.generateSecret()
+        settings.twoFactorSecret = secret
+        updateSettings(settings)
+        val qrCodeUrl = totpService.generateQrCodeUrl(username, secret)
+        return TwoFactorSetupResult(secret = secret, qrCodeUrl = qrCodeUrl)
+    }
+
+    fun enable2FA(userId: Long, code: String): Boolean {
+        val settings = getSettingsByUserId(userId) ?: return false
+        val secret = settings.twoFactorSecret ?: return false
+        if (!totpService.verifyCode(secret, code)) {
+            return false
+        }
+        settings.is2FAEnabled = true
+        return updateSettings(settings)
+    }
+
+    fun disable2FA(userId: Long): Boolean {
+        val settings = getSettingsByUserId(userId) ?: return false
+        settings.is2FAEnabled = false
+        settings.twoFactorSecret = null
+        return updateSettings(settings)
+    }
+
+    fun verify2FA(userId: Long, code: String): Boolean {
+        val settings = getSettingsByUserId(userId) ?: return false
+        if (!settings.is2FAEnabled) return true
+        val secret = settings.twoFactorSecret ?: return false
+        return totpService.verifyCode(secret, code)
+    }
+
+    data class TwoFactorSetupResult(
+        val secret: String,
+        val qrCodeUrl: String
+    )
 
     data class PinVerificationResult(
         val success: Boolean,

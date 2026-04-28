@@ -40,6 +40,11 @@ data class PinVerificationResponse(
     val lockedUntil: LocalDateTime? = null
 )
 
+data class Setup2FARequest(
+    val userId: Long,
+    val username: String
+)
+
 data class Enable2FASetupResponse(
     val secret: String,
     val qrCodeUrl: String

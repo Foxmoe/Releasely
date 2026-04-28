@@ -1,6 +1,5 @@
 package top.foxmoe.releasely
 
-import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -11,9 +10,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.util.UUID
-import java.security.MessageDigest
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,10 +44,12 @@ class MainActivity : ComponentActivity() {
                         is ScreenState.AppLock -> {
                             AppLockScreenComponent(
                                 onUnlock = { pin ->
-                                    val prefs = getSharedPreferences("security", Context.MODE_PRIVATE)
-                                    val storedHash = prefs.getString("pin_hash", "") ?: ""
-                                    val inputHash = hashPin(pin)
-                                    if (inputHash == storedHash) {
+                                    val result = runCatching {
+                                        kotlinx.coroutines.runBlocking {
+                                            app.securitySettingsService.verifyPin(null, pin)
+                                        }
+                                    }.getOrDefault(false)
+                                    if (result) {
                                         screenState = ScreenState.Main(checkProfile(app))
                                         true
                                     } else {
@@ -119,15 +120,13 @@ class MainActivity : ComponentActivity() {
     }
 
     private suspend fun checkSecurityAndShowScreen(app: ReleaselyApp): ScreenState {
-        val prefs = getSharedPreferences("security", Context.MODE_PRIVATE)
-        val decoyEnabled = prefs.getBoolean("decoy_enabled", false)
-        val appLockEnabled = prefs.getBoolean("app_lock_enabled", false)
+        val settings = app.securitySettingsService.getSettings(null)
 
-        if (decoyEnabled) {
+        if (settings.decoyEnabled) {
             return ScreenState.Decoy
         }
 
-        if (appLockEnabled) {
+        if (settings.appLockEnabled) {
             return ScreenState.AppLock
         }
 
@@ -141,11 +140,6 @@ class MainActivity : ComponentActivity() {
         } catch (e: Exception) {
             false
         }
-    }
-
-    private fun hashPin(pin: String): String {
-        val bytes = MessageDigest.getInstance("SHA-256").digest(pin.toByteArray())
-        return bytes.joinToString("") { "%02x".format(it) }
     }
 }
 

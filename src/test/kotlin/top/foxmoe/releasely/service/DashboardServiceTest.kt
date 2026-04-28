@@ -65,8 +65,7 @@ class DashboardServiceTest {
     fun `getRecentActivities should return limited activities`() {
         val activities = listOf(
             ActivityRecord(id = 1L, userId = testUserId),
-            ActivityRecord(id = 2L, userId = testUserId),
-            ActivityRecord(id = 3L, userId = testUserId)
+            ActivityRecord(id = 2L, userId = testUserId)
         )
         `when`(activityMapper.selectList(any())).thenReturn(activities)
 

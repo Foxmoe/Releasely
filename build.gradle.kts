@@ -37,6 +37,7 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.16")
     implementation("org.mariadb.jdbc:mariadb-java-client:3.3.2")
     implementation("com.baomidou:mybatis-plus-spring-boot3-starter:3.5.7")
+    implementation("org.flywaydb:flyway-mysql")
     implementation("io.jsonwebtoken:jjwt-api:0.12.5")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.5")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.5")

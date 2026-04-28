@@ -1,8 +1,8 @@
 package top.foxmoe.releasely.dto
 
 data class ApiResponse<T>(
-    val code: Int,
-    val message: String,
+    val code: Int = 200,
+    val message: String = "success",
     val data: T? = null
 ) {
     companion object {

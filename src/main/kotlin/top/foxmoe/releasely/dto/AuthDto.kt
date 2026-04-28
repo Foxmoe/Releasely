@@ -22,17 +22,21 @@ data class TwoFactorSetupResponse(
     val qrCodeUrl: String
 )
 
+data class TwoFactorLoginRequest(
+    val preAuthToken: String,
+    val totpCode: String
+)
+
 data class TwoFactorVerifyRequest(
-    val username: String,
+    val userId: Long,
     val code: String
 )
 
 data class Enable2FARequest(
-    val username: String,
+    val userId: Long,
     val code: String
 )
 
 data class Disable2FARequest(
-    val username: String,
-    val password: String
+    val userId: Long
 )

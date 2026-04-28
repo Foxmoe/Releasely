@@ -26,6 +26,9 @@ class SecurityServiceTest {
     @Mock
     private lateinit var passwordEncoder: PasswordEncoder
 
+    @Mock
+    private lateinit var totpService: TotpService
+
     @InjectMocks
     private lateinit var securityService: SecurityService
 

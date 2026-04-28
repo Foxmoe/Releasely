@@ -4,6 +4,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
+import java.time.Instant
+import java.time.ZoneId
 
 data class SyncRecord(
     val id: String,
@@ -28,120 +30,182 @@ class SyncService(
         authToken = token
     }
 
-    suspend fun syncAll(): Result<Unit> = withContext(Dispatchers.IO) {
+    suspend fun syncAll(userId: Long): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            syncActivities()
-            syncCycles()
-            syncMedications()
-            syncPartners()
+            pushActivities(userId)
+            pushCycles(userId)
+            pushMedications(userId)
+            pushPartners(userId)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    private suspend fun syncActivities() {
+    private suspend fun pushActivities(userId: Long) {
         val activities = activityService.getAllActivities()
-        val jsonArray = JSONArray()
         activities.forEach { activity ->
             val json = JSONObject().apply {
-                put("id", activity.id)
-                put("date", activity.date)
+                put("userId", userId)
                 put("type", activity.type)
-                put("protection", activity.protection)
-                put("pleasure", activity.pleasure)
-                put("mood", activity.mood)
-                put("notes", activity.notes)
-                put("partnerId", activity.partnerId)
+                put("protection", if (activity.protection) "有保护" else "无保护")
+                put("pleasureRating", activity.pleasure ?: 0)
+                put("healthStatus", activity.mood ?: "")
+                put("occurredAt", Instant.ofEpochSecond(activity.date)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDateTime().toString())
+                put("notes", activity.notes ?: "")
             }
-            jsonArray.put(json)
+            apiService.post("/activity", json.toString(), authToken)
         }
-
-        val payload = JSONObject().apply {
-            put("userId", 1L)
-            put("activities", jsonArray)
-        }
-
-        apiService.post("/sync/activities", payload.toString(), authToken)
     }
 
-    private suspend fun syncCycles() {
+    private suspend fun pushCycles(userId: Long) {
         val cycles = cycleService.getAllCycles()
-        val jsonArray = JSONArray()
         cycles.forEach { cycle ->
             val json = JSONObject().apply {
-                put("id", cycle.id)
-                put("startDate", cycle.startDate)
-                put("duration", cycle.duration)
-                put("predictedNext", cycle.predictedNext)
+                put("userId", userId)
+                put("startDate", Instant.ofEpochSecond(cycle.startDate)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate().toString())
+                put("duration", cycle.duration ?: 5)
+                put("predictedNext", cycle.predictedNext?.let {
+                    Instant.ofEpochSecond(it)
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate().toString()
+                })
             }
-            jsonArray.put(json)
+            apiService.post("/cycles", json.toString(), authToken)
         }
-
-        val payload = JSONObject().apply {
-            put("userId", 1L)
-            put("cycles", jsonArray)
-        }
-
-        apiService.post("/sync/cycles", payload.toString(), authToken)
     }
 
-    private suspend fun syncMedications() {
+    private suspend fun pushMedications(userId: Long) {
         val medications = medicationService.getAllMedications()
-        val jsonArray = JSONArray()
         medications.forEach { medication ->
             val json = JSONObject().apply {
-                put("id", medication.id)
+                put("userId", userId)
                 put("name", medication.name)
                 put("dosage", medication.dosage)
-                put("reminderTime", medication.reminderTime)
-                put("lastTaken", medication.lastTaken)
+                put("reminderTime", medication.reminderTime?.let {
+                    Instant.ofEpochSecond(it)
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDateTime().toString()
+                })
             }
-            jsonArray.put(json)
+            apiService.post("/medications", json.toString(), authToken)
         }
-
-        val payload = JSONObject().apply {
-            put("userId", 1L)
-            put("medications", jsonArray)
-        }
-
-        apiService.post("/sync/medications", payload.toString(), authToken)
     }
 
-    private suspend fun syncPartners() {
+    private suspend fun pushPartners(userId: Long) {
         val partners = partnerService.getAllPartners()
-        val jsonArray = JSONArray()
         partners.forEach { partner ->
             val json = JSONObject().apply {
-                put("id", partner.id)
-                put("name", partner.name)
-                put("inviteCode", partner.inviteCode)
+                put("userId", userId)
+                put("partnerId", partner.id)
                 put("status", partner.status)
+                put("sharedPermissions", partner.inviteCode)
             }
-            jsonArray.put(json)
+            apiService.post("/partners", json.toString(), authToken)
         }
-
-        val payload = JSONObject().apply {
-            put("userId", 1L)
-            put("partners", jsonArray)
-        }
-
-        apiService.post("/sync/partners", payload.toString(), authToken)
     }
 
-    suspend fun fetchFromServer(): Result<Unit> = withContext(Dispatchers.IO) {
+    suspend fun fetchFromServer(userId: Long): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            val response = apiService.get("/sync/pending", authToken)
-            response.getOrNull()?.let { json ->
-                val jsonObj = JSONObject(json)
-                jsonObj.optJSONArray("activities")?.let { /* merge */ }
-                jsonObj.optJSONArray("cycles")?.let { /* merge */ }
-                jsonObj.optJSONArray("medications")?.let { /* merge */ }
-                jsonObj.optJSONArray("partners")?.let { /* merge */ }
-            }
+            fetchActivities(userId)
+            fetchCycles(userId)
+            fetchMedications(userId)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    private suspend fun fetchActivities(userId: Long) {
+        val response = apiService.get("/activity/list?userId=$userId", authToken)
+        response.getOrNull()?.let { jsonString ->
+            val jsonObj = JSONObject(jsonString)
+            val data = jsonObj.optJSONObject("data")
+            val activities = data?.optJSONArray("activities")
+            activities?.let { array ->
+                for (i in 0 until array.length()) {
+                    val item = array.getJSONObject(i)
+                    val occurredAt = item.optString("occurredAt", "")
+                    val date = if (occurredAt.isNotEmpty()) {
+                        java.time.LocalDateTime.parse(occurredAt)
+                            .atZone(ZoneId.systemDefault())
+                            .toEpochSecond()
+                    } else 0L
+
+                    activityService.insertActivity(
+                        date = date,
+                        type = item.optString("type", ""),
+                        protection = item.optString("protection", "") == "有保护",
+                        pleasure = item.optInt("pleasureRating", 0),
+                        mood = item.optString("healthStatus", ""),
+                        notes = item.optString("notes", ""),
+                        partnerId = null
+                    )
+                }
+            }
+        }
+    }
+
+    private suspend fun fetchCycles(userId: Long) {
+        val response = apiService.get("/cycles?userId=$userId", authToken)
+        response.getOrNull()?.let { jsonString ->
+            val jsonObj = JSONObject(jsonString)
+            val data = jsonObj.optJSONObject("data")
+            val cycles = data?.optJSONArray("cycles")
+            cycles?.let { array ->
+                for (i in 0 until array.length()) {
+                    val item = array.getJSONObject(i)
+                    val startDateStr = item.optString("startDate", "")
+                    val startDate = if (startDateStr.isNotEmpty()) {
+                        java.time.LocalDate.parse(startDateStr)
+                            .atStartOfDay(ZoneId.systemDefault())
+                            .toEpochSecond()
+                    } else 0L
+
+                    cycleService.insertCycle(
+                        startDate = startDate,
+                        duration = item.optInt("duration", 5),
+                        predictedNext = item.optString("predictedNext", "").let { str ->
+                            if (str.isNotEmpty()) {
+                                java.time.LocalDate.parse(str)
+                                    .atStartOfDay(ZoneId.systemDefault())
+                                    .toEpochSecond()
+                            } else null
+                        }
+                    )
+                }
+            }
+        }
+    }
+
+    private suspend fun fetchMedications(userId: Long) {
+        val response = apiService.get("/medications?userId=$userId", authToken)
+        response.getOrNull()?.let { jsonString ->
+            val jsonObj = JSONObject(jsonString)
+            val data = jsonObj.optJSONObject("data")
+            val medications = data?.optJSONArray("medications")
+            medications?.let { array ->
+                for (i in 0 until array.length()) {
+                    val item = array.getJSONObject(i)
+                    val reminderTime = item.optString("reminderTime", "").let { str ->
+                        if (str.isNotEmpty()) {
+                            java.time.LocalDateTime.parse(str)
+                                .atZone(ZoneId.systemDefault())
+                                .toEpochSecond()
+                        } else null
+                    }
+
+                    medicationService.insertMedication(
+                        name = item.optString("name", ""),
+                        dosage = item.optString("dosage", ""),
+                        reminderTime = reminderTime
+                    )
+                }
+            }
         }
     }
 }

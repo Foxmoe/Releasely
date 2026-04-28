@@ -15,6 +15,7 @@ data class ActivityRecord(
     var pleasureRating: Int? = null,
     var healthStatus: String? = null,
     var occurredAt: LocalDateTime? = null,
+    var encryptedNotes: String? = null,
     var isDeleted: Boolean = false,
     var createdAt: LocalDateTime? = null
 )

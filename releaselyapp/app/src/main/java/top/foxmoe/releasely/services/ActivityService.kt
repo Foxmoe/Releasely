@@ -2,6 +2,7 @@ package top.foxmoe.releasely.services
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import top.foxmoe.releasely.security.LocalEncryptionManager
 import java.util.UUID
 
 data class ActivityRecord(
@@ -27,7 +28,7 @@ class ActivityService(private val queries: top.foxmoe.releasely.database.AppData
                 protection = row.protection == 1L,
                 pleasure = row.pleasure?.toInt(),
                 mood = row.mood,
-                notes = row.notes,
+                notes = row.notes?.let { decryptIfNeeded(it) },
                 partnerId = row.partnerId,
                 createdAt = row.createdAt
             )
@@ -43,7 +44,7 @@ class ActivityService(private val queries: top.foxmoe.releasely.database.AppData
                 protection = row.protection == 1L,
                 pleasure = row.pleasure?.toInt(),
                 mood = row.mood,
-                notes = row.notes,
+                notes = row.notes?.let { decryptIfNeeded(it) },
                 partnerId = row.partnerId,
                 createdAt = row.createdAt
             )
@@ -67,7 +68,7 @@ class ActivityService(private val queries: top.foxmoe.releasely.database.AppData
             protection = if (protection) 1L else 0L,
             pleasure = pleasure?.toLong(),
             mood = mood,
-            notes = notes,
+            notes = notes?.let { LocalEncryptionManager.encrypt(it) },
             partnerId = partnerId
         )
         id
@@ -89,7 +90,7 @@ class ActivityService(private val queries: top.foxmoe.releasely.database.AppData
             protection = if (protection) 1L else 0L,
             pleasure = pleasure?.toLong(),
             mood = mood,
-            notes = notes,
+            notes = notes?.let { LocalEncryptionManager.encrypt(it) },
             partnerId = partnerId,
             id = id
         )
@@ -109,7 +110,7 @@ class ActivityService(private val queries: top.foxmoe.releasely.database.AppData
                     protection = row.protection == 1L,
                     pleasure = row.pleasure?.toInt(),
                     mood = row.mood,
-                    notes = row.notes,
+                    notes = row.notes?.let { decryptIfNeeded(it) },
                     partnerId = row.partnerId,
                     createdAt = row.createdAt
                 )
@@ -118,5 +119,13 @@ class ActivityService(private val queries: top.foxmoe.releasely.database.AppData
 
     suspend fun getActivityCount(): Long = withContext(Dispatchers.IO) {
         queries.countActivities().executeAsOne()
+    }
+
+    private fun decryptIfNeeded(value: String): String {
+        return try {
+            LocalEncryptionManager.decrypt(value)
+        } catch (e: Exception) {
+            value
+        }
     }
 }

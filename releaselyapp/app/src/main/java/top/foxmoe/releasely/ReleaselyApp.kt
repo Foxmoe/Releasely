@@ -9,6 +9,7 @@ import top.foxmoe.releasely.services.CycleService
 import top.foxmoe.releasely.services.MedicationService
 import top.foxmoe.releasely.services.PartnerService
 import top.foxmoe.releasely.services.ApiService
+import top.foxmoe.releasely.services.SecuritySettingsService
 import top.foxmoe.releasely.services.SyncService
 
 class ReleaselyApp : Application() {
@@ -20,6 +21,7 @@ class ReleaselyApp : Application() {
     lateinit var partnerService: PartnerService
     lateinit var apiService: ApiService
     lateinit var syncService: SyncService
+    lateinit var securitySettingsService: SecuritySettingsService
 
     override fun onCreate() {
         super.onCreate()
@@ -34,6 +36,7 @@ class ReleaselyApp : Application() {
         partnerService = PartnerService(database)
         apiService = ApiService()
         syncService = SyncService(apiService, activityService, cycleService, medicationService, partnerService)
+        securitySettingsService = SecuritySettingsService(applicationContext, apiService)
     }
 }
 

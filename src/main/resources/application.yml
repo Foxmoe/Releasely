@@ -7,14 +7,21 @@ spring:
     username: releasely
     password: releaselyOhFuckMECummingONmyFace
     driver-class-name: org.mariadb.jdbc.Driver
-    jpa:
-        hibernate:
-            ddl-auto: update
-        show-sql: true
-        properties:
-            hibernate:
-            format_sql: true
-            dialect: org.hibernate.dialect.MariaDBDialect
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+app:
+  encryption:
+    master-key: ${ENCRYPTION_MASTER_KEY:default-master-key-change-in-production}
+
 logging:
   level:
     org.hibernate.sql: debug

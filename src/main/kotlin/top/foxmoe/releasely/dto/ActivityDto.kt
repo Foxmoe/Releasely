@@ -10,6 +10,7 @@ data class ActivityDto(
     val pleasureRating: Int? = null,
     val healthStatus: String? = null,
     val occurredAt: LocalDateTime? = null,
+    val notes: String? = null,
     val createdAt: LocalDateTime? = null
 )
 
@@ -19,7 +20,8 @@ data class CreateActivityRequest(
     val protection: String? = null,
     val pleasureRating: Int? = null,
     val healthStatus: String? = null,
-    val occurredAt: LocalDateTime? = null
+    val occurredAt: LocalDateTime? = null,
+    val notes: String? = null
 )
 
 data class UpdateActivityRequest(
@@ -28,7 +30,8 @@ data class UpdateActivityRequest(
     val protection: String? = null,
     val pleasureRating: Int? = null,
     val healthStatus: String? = null,
-    val occurredAt: LocalDateTime? = null
+    val occurredAt: LocalDateTime? = null,
+    val notes: String? = null
 )
 
 data class ActivityListResponse(
