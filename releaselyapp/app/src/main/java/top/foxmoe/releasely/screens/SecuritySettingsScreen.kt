@@ -77,18 +77,29 @@ fun SecuritySettingsScreen(
             }
 
             item {
-                SecurityCard(
-                    title = "界面伪装",
-                    subtitle = "伪装成计算器应用",
-                    icon = Icons.Filled.Edit,
-                    color = Color(0xFF9C27B0),
-                    isEnabled = decoyEnabled,
-                    onToggle = { enabled ->
-                        val prefs = context.getSharedPreferences("security", Context.MODE_PRIVATE)
-                        prefs.edit().putBoolean("decoy_enabled", enabled).apply()
-                        decoyEnabled = enabled
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SecurityCard(
+                        title = "界面伪装",
+                        subtitle = "伪装成计算器应用",
+                        icon = Icons.Filled.Edit,
+                        color = Color(0xFF9C27B0),
+                        isEnabled = decoyEnabled,
+                        onToggle = { enabled ->
+                            val prefs = context.getSharedPreferences("security", Context.MODE_PRIVATE)
+                            prefs.edit().putBoolean("decoy_enabled", enabled).apply()
+                            decoyEnabled = enabled
+                        }
+                    )
+                    if (decoyEnabled) {
+                        Button(
+                            onClick = onDecoyNavigate,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text("预览伪装界面")
+                        }
                     }
-                )
+                }
             }
 
             item {

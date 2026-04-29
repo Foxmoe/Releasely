@@ -38,6 +38,7 @@ fun ProfileScreen() {
 
     var showPartnerScreen by remember { mutableStateOf(false) }
     var showSecurityScreen by remember { mutableStateOf(false) }
+    var showDecoyPreview by remember { mutableStateOf(false) }
     var showPersonalProfile by remember { mutableStateOf(false) }
     var showNotificationSettings by remember { mutableStateOf(false) }
     var showPrivacySettings by remember { mutableStateOf(false) }
@@ -85,8 +86,13 @@ fun ProfileScreen() {
         showSecurityScreen -> {
             SecuritySettingsScreen(
                 onBack = { showSecurityScreen = false },
-                onDecoyNavigate = { /* TODO: 伪装模式导航 */ }
+                onDecoyNavigate = { showDecoyPreview = true }
             )
+            return
+        }
+
+        showDecoyPreview -> {
+            top.foxmoe.releasely.components.DecoyScreen()
             return
         }
 
