@@ -23,12 +23,17 @@ class ReleaselyApp : Application() {
     lateinit var cycleService: CycleService
     lateinit var medicationService: MedicationService
     lateinit var partnerService: PartnerService
-    lateinit var wishlistService: WishlistService
     lateinit var apiService: ApiService
-    lateinit var syncService: SyncService
     lateinit var securitySettingsService: SecuritySettingsService
-    lateinit var reminderManager: MedicationReminderManager
-    lateinit var healthReportService: HealthReportService
+
+    // 延迟初始化非关键服务，减少冷启动时间
+    val wishlistService by lazy { WishlistService(database) }
+    val syncService by lazy {
+        val syncMetaService = SyncMetaService(database)
+        SyncService(apiService, syncMetaService, activityService, cycleService, medicationService, partnerService)
+    }
+    val reminderManager by lazy { MedicationReminderManager(applicationContext) }
+    val healthReportService by lazy { HealthReportService(apiService) }
 
     override fun onCreate() {
         super.onCreate()
@@ -36,18 +41,13 @@ class ReleaselyApp : Application() {
         database = AppDatabase(driver)
         profileQueries = database.profileQueries
 
-        // Initialize services
+        // 初始化核心服务
         activityService = ActivityService(database)
         cycleService = CycleService(database)
         medicationService = MedicationService(database)
         partnerService = PartnerService(database)
-        wishlistService = WishlistService(database)
         apiService = ApiService()
-        val syncMetaService = SyncMetaService(database)
-        syncService = SyncService(apiService, syncMetaService, activityService, cycleService, medicationService, partnerService)
-        reminderManager = MedicationReminderManager(applicationContext)
         securitySettingsService = SecuritySettingsService(applicationContext, apiService)
-        healthReportService = HealthReportService(apiService)
     }
 
     /** 获取当前激活的用户资料，返回 null 表示未设置 */
@@ -65,4 +65,3 @@ class ReleaselyApp : Application() {
         return profile?.gender == "Ms"
     }
 }
-
