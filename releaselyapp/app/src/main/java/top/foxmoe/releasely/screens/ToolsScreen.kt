@@ -50,6 +50,7 @@ fun ToolsScreen() {
         }
         allTools.add(ToolItem("药物提醒", Icons.Filled.Notifications, Color(0xFFFF9800), ToolType.MedicationReminder))
         allTools.add(ToolItem("健康报告", Icons.Filled.Info, Color(0xFF4CAF50), ToolType.HealthReport))
+        allTools.add(ToolItem("知识库", Icons.Filled.Search, Color(0xFF795548), ToolType.KnowledgeBase))
         allTools.add(ToolItem("数据导出", Icons.Filled.Send, Color(0xFF2196F3), ToolType.DataExport))
         allTools.toList()
     }
@@ -108,6 +109,7 @@ enum class ToolType {
     OvulationCalculator,
     MedicationReminder,
     HealthReport,
+    KnowledgeBase,
     DataExport
 }
 
@@ -177,6 +179,7 @@ fun ToolDetailDialog(tool: ToolItem, onDismiss: () -> Unit) {
         ToolType.OvulationCalculator -> OvulationCalculatorDialog(onDismiss)
         ToolType.MedicationReminder -> MedicationReminderDialog(onDismiss)
         ToolType.HealthReport -> HealthReportDialog(onDismiss)
+        ToolType.KnowledgeBase -> KnowledgeScreen(onBack = onDismiss)
         ToolType.DataExport -> DataExportDialog(onDismiss)
     }
 }
