@@ -68,7 +68,15 @@ fun ProfileScreen() {
                         app.partnerService.insertPartner(name)
                     }
                 },
-                onInvitePartner = { /* TODO: 处理伴侣邀请码 */ },
+                onInvitePartner = { code ->
+                    GlobalScope.launch(Dispatchers.IO) {
+                        val app = context.applicationContext as ReleaselyApp
+                        val partner = app.partnerService.getPartnerByInviteCode(code)
+                        if (partner != null) {
+                            app.partnerService.updatePartnerStatus(partner.id, "connected")
+                        }
+                    }
+                },
                 onBack = { showPartnerScreen = false }
             )
             return
