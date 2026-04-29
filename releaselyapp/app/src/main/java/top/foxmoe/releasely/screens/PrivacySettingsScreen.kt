@@ -66,6 +66,7 @@ fun PrivacySettingsScreen(onBack: () -> Unit) {
             onCheckedChange = {
                 screenshotProtection = it
                 save()
+                (context as? top.foxmoe.releasely.MainActivity)?.updateScreenshotProtection()
             }
         )
 

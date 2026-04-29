@@ -3,6 +3,8 @@ package top.foxmoe.releasely.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,7 +20,9 @@ import androidx.compose.ui.text.input.KeyboardType
 @Composable
 fun AppLockScreen(
     onUnlock: (pin: String) -> Boolean,
-    onCancel: () -> Unit
+    onCancel: () -> Unit,
+    useBiometric: Boolean = false,
+    onBiometricUnlock: () -> Unit = {}
 ) {
     var pin by remember { mutableStateOf("") }
     var error by remember { mutableStateOf(false) }
@@ -76,6 +80,23 @@ fun AppLockScreen(
             Text("解锁")
         }
 
+        if (useBiometric) {
+            Spacer(modifier = Modifier.height(16.dp))
+            OutlinedButton(
+                onClick = onBiometricUnlock,
+                modifier = Modifier.width(200.dp),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Lock,
+                    contentDescription = "生物识别",
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("指纹/面容解锁")
+            }
+        }
+
         Spacer(modifier = Modifier.height(16.dp))
 
         TextButton(onClick = onCancel) {
@@ -89,6 +110,19 @@ fun DecoyScreen() {
     var display by remember { mutableStateOf("0") }
     var firstOperand by remember { mutableStateOf<Double?>(null) }
     var operator by remember { mutableStateOf<String?>(null) }
+    var waitingForSecondOperand by remember { mutableStateOf(false) }
+
+    fun calculate(): Double {
+        val second = display.toDoubleOrNull() ?: 0.0
+        val first = firstOperand ?: 0.0
+        return when (operator) {
+            "+" -> first + second
+            "-" -> first - second
+            "×" -> first * second
+            "÷" -> if (second != 0.0) first / second else 0.0
+            else -> second
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -97,6 +131,7 @@ fun DecoyScreen() {
             .padding(16.dp),
         horizontalAlignment = Alignment.End
     ) {
+        Spacer(modifier = Modifier.weight(1f))
         Text(
             text = display,
             fontSize = 64.sp,
@@ -104,76 +139,72 @@ fun DecoyScreen() {
             modifier = Modifier.padding(bottom = 32.dp)
         )
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            listOf("AC", "+/-", "%", "÷").forEach { label ->
-                CalcButton(label, Color(0xFFA5A5A5)) {
-                    display = when (label) {
-                        "AC" -> "0"
-                        "+/-" -> (display.toDoubleOrNull()?.times(-1) ?: 0.0).toString()
-                        "%" -> (display.toDoubleOrNull()?.div(100) ?: 0.0).toString()
-                        else -> display
+        val buttons = listOf(
+            listOf("AC", "+/-", "%", "÷"),
+            listOf("7", "8", "9", "×"),
+            listOf("4", "5", "6", "-"),
+            listOf("1", "2", "3", "+"),
+            listOf("0", ".", "=")
+        )
+
+        buttons.forEach { row ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                row.forEach { label ->
+                    val color = when (label) {
+                        "AC", "+/-", "%" -> Color(0xFFA5A5A5)
+                        "=", "÷", "×", "-", "+" -> Color(0xFFFF9F0A)
+                        else -> Color(0xFF505050)
+                    }
+                    val modifier = if (label == "0") Modifier.weight(2f) else Modifier.weight(1f)
+                    CalcButton(label, color, modifier = modifier) {
+                        when (label) {
+                            "AC" -> {
+                                display = "0"
+                                firstOperand = null
+                                operator = null
+                                waitingForSecondOperand = false
+                            }
+                            "+/-" -> {
+                                display = (display.toDoubleOrNull()?.times(-1) ?: 0.0).toString()
+                            }
+                            "%" -> {
+                                display = (display.toDoubleOrNull()?.div(100) ?: 0.0).toString()
+                            }
+                            "+", "-", "×", "÷" -> {
+                                firstOperand = display.toDoubleOrNull()
+                                operator = label
+                                waitingForSecondOperand = true
+                            }
+                            "=" -> {
+                                val result = calculate()
+                                display = if (result == result.toLong().toDouble()) {
+                                    result.toLong().toString()
+                                } else {
+                                    result.toString()
+                                }
+                                firstOperand = null
+                                operator = null
+                                waitingForSecondOperand = false
+                            }
+                            "." -> {
+                                if (!display.contains(".")) display += "."
+                            }
+                            else -> {
+                                if (waitingForSecondOperand) {
+                                    display = label
+                                    waitingForSecondOperand = false
+                                } else {
+                                    display = if (display == "0") label else display + label
+                                }
+                            }
+                        }
                     }
                 }
             }
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            listOf("7", "8", "9", "×").forEach { label ->
-                CalcButton(label, Color(0xFF505050)) {
-                    display = label
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            listOf("4", "5", "6", "-").forEach { label ->
-                CalcButton(label, Color(0xFF505050)) {
-                    display = label
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            listOf("1", "2", "3", "+").forEach { label ->
-                CalcButton(label, Color(0xFF505050)) {
-                    display = label
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            CalcButton("0", Color(0xFF505050), modifier = Modifier.weight(2f)) {
-                display = "0"
-            }
-            CalcButton(".", Color(0xFF505050)) {
-                if (!display.contains(".")) display += "."
-            }
-            CalcButton("=", Color(0xFFFF9F0A)) {
-                display = "="
-            }
+            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }

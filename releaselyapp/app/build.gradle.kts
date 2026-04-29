@@ -121,6 +121,7 @@ dependencies {
     implementation("app.cash.sqldelight:android-driver:2.0.1")
     implementation("app.cash.sqldelight:coroutines-extensions:2.0.1")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("androidx.biometric:biometric:1.1.0")
 
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 }
