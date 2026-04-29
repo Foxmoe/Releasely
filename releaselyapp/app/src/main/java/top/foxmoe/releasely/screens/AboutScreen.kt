@@ -13,8 +13,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AboutScreen(onBack: () -> Unit) {
+fun AboutScreen(onBack: () -> Unit, onPrivacyPolicy: () -> Unit = {}) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -76,6 +77,33 @@ fun AboutScreen(onBack: () -> Unit) {
         AboutItem(title = "GitHub", value = "https://github.com/Foxmoe/Releasely")
         AboutItem(title = "开源协议", value = "MIT License")
         AboutItem(title = "开发团队", value = "Foxmoe")
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 6.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFFAFAFA)),
+            onClick = onPrivacyPolicy
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = "隐私政策", fontSize = 14.sp, color = Color.Gray)
+                Text(
+                    text = "查看",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF2196F3)
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
 

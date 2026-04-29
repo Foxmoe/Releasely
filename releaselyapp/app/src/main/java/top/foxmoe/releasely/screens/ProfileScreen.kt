@@ -42,6 +42,7 @@ fun ProfileScreen() {
     var showNotificationSettings by remember { mutableStateOf(false) }
     var showPrivacySettings by remember { mutableStateOf(false) }
     var showAbout by remember { mutableStateOf(false) }
+    var showPrivacyPolicy by remember { mutableStateOf(false) }
     var showFeedbackScreen by remember { mutableStateOf(false) }
     var showLoginScreen by remember { mutableStateOf(false) }
     var showRegisterScreen by remember { mutableStateOf(false) }
@@ -97,7 +98,18 @@ fun ProfileScreen() {
         }
 
         showAbout -> {
-            AboutScreen(onBack = { showAbout = false })
+            AboutScreen(
+                onBack = { showAbout = false },
+                onPrivacyPolicy = {
+                    showAbout = false
+                    showPrivacyPolicy = true
+                }
+            )
+            return
+        }
+
+        showPrivacyPolicy -> {
+            PrivacyPolicyScreen(onBack = { showPrivacyPolicy = false })
             return
         }
 
