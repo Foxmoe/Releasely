@@ -6,8 +6,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -16,6 +18,14 @@ import androidx.compose.ui.unit.sp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AboutScreen(onBack: () -> Unit, onPrivacyPolicy: () -> Unit = {}) {
+    val context = LocalContext.current
+    val versionName = remember {
+        try {
+            context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "1.0.0"
+        } catch (e: Exception) {
+            "1.0.0"
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -56,7 +66,7 @@ fun AboutScreen(onBack: () -> Unit, onPrivacyPolicy: () -> Unit = {}) {
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "版本 1.0.0",
+                text = "版本 $versionName",
                 fontSize = 14.sp,
                 color = Color.Gray
             )
