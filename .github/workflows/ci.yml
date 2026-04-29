@@ -66,9 +66,35 @@ jobs:
       - name: Assemble Debug APK
         run: ./gradlew -p releaselyapp assembleDebug --no-daemon
 
-      - name: Upload APK artifact
+      - name: Assemble Release APK
+        env:
+          RELEASE_STORE_FILE: ${{ secrets.RELEASE_STORE_FILE }}
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+        run: |
+          if [ -n "$RELEASE_STORE_FILE" ]; then
+            echo "$RELEASE_STORE_FILE" | base64 -d > releaselyapp/releasely.keystore
+            echo "RELEASE_STORE_FILE=releasely.keystore" >> releaselyapp/local.properties
+            echo "RELEASE_STORE_PASSWORD=$RELEASE_STORE_PASSWORD" >> releaselyapp/local.properties
+            echo "RELEASE_KEY_ALIAS=$RELEASE_KEY_ALIAS" >> releaselyapp/local.properties
+            echo "RELEASE_KEY_PASSWORD=$RELEASE_KEY_PASSWORD" >> releaselyapp/local.properties
+            ./gradlew -p releaselyapp assembleRelease --no-daemon
+          else
+            echo "No release signing config found, skipping release build"
+          fi
+
+      - name: Upload Debug APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: releasely-debug-apk
           path: releaselyapp/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+
+      - name: Upload Release APK artifact
+        if: env.RELEASE_STORE_FILE != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: releasely-release-apk
+          path: releaselyapp/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: warn

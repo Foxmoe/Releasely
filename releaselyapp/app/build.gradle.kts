@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     kotlin("android")
@@ -22,6 +24,19 @@ val versionMajor = 1
 val versionMinor = 0
 val versionPatch = gitCommitCount
 
+// 从 local.properties 或环境变量读取签名配置（优先 local.properties，便于 CI 注入）
+val localProps = Properties().apply {
+    val localFile = rootProject.file("local.properties")
+    if (localFile.exists()) {
+        load(localFile.inputStream())
+    }
+}
+
+fun signingProp(key: String, envVar: String): String? {
+    return localProps.getProperty(key)?.ifBlank { null }
+        ?: System.getenv(envVar)?.ifBlank { null }
+}
+
 android {
     namespace = "top.foxmoe.releasely"
     compileSdk = 34
@@ -34,9 +49,36 @@ android {
         versionName = "$versionMajor.$versionMinor.$versionPatch"
     }
 
+    signingConfigs {
+        create("release") {
+            val storeFilePath = signingProp("RELEASE_STORE_FILE", "RELEASE_STORE_FILE")
+            val storePass = signingProp("RELEASE_STORE_PASSWORD", "RELEASE_STORE_PASSWORD")
+            val keyAlias = signingProp("RELEASE_KEY_ALIAS", "RELEASE_KEY_ALIAS")
+            val keyPass = signingProp("RELEASE_KEY_PASSWORD", "RELEASE_KEY_PASSWORD")
+
+            if (storeFilePath != null && storePass != null && keyAlias != null && keyPass != null) {
+                storeFile = file(storeFilePath)
+                this.storePassword = storePass
+                this.keyAlias = keyAlias
+                this.keyPassword = keyPass
+            } else {
+                println("[WARN] Release signing config incomplete — building unsigned release APK. " +
+                    "Set RELEASE_STORE_FILE, RELEASE_STORE_PASSWORD, RELEASE_KEY_ALIAS, RELEASE_KEY_PASSWORD " +
+                    "in local.properties or environment variables.")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            // 仅在签名配置完整时使用 release 签名，否则回退到 debug 签名（本地测试）
+            val releaseSigning = signingConfigs.findByName("release")
+            if (releaseSigning?.storeFile?.exists() == true) {
+                signingConfig = releaseSigning
+            } else {
+                signingConfig = signingConfigs.getByName("debug")
+            }
         }
     }
 
