@@ -112,6 +112,10 @@ fun TwoFactorScreen(
                             .putString("token", result.token)
                             .putString("username", username)
                             .apply()
+                        result.userId?.let { uid ->
+                            context.getSharedPreferences("auth", android.content.Context.MODE_PRIVATE)
+                                .edit().putLong("userId", uid).apply()
+                        }
                         onVerifySuccess()
                     } else {
                         error = result.error ?: "验证失败"

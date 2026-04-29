@@ -10,6 +10,7 @@ data class LoginResult(
     val preAuthToken: String? = null,
     val requires2FA: Boolean = false,
     val username: String = "",
+    val userId: Long? = null,
     val error: String? = null
 )
 
@@ -34,18 +35,21 @@ class AuthService(private val apiService: ApiService) {
                 if (code == 200) {
                     val data = obj.optJSONObject("data")
                     val requires2FA = data?.optBoolean("requires2FA", false) ?: false
+                    val userId = data?.optLong("userId", -1L)?.takeIf { it != -1L }
                     if (requires2FA) {
                         LoginResult(
                             success = true,
                             preAuthToken = data?.optString("preAuthToken", ""),
                             requires2FA = true,
-                            username = data?.optString("username", username) ?: username
+                            username = data?.optString("username", username) ?: username,
+                            userId = userId
                         )
                     } else {
                         LoginResult(
                             success = true,
                             token = data?.optString("token", ""),
-                            username = data?.optString("username", username) ?: username
+                            username = data?.optString("username", username) ?: username,
+                            userId = userId
                         )
                     }
                 } else {
@@ -69,10 +73,12 @@ class AuthService(private val apiService: ApiService) {
                 val code = obj.optInt("code", 500)
                 if (code == 200) {
                     val data = obj.optJSONObject("data")
+                    val userId = data?.optLong("userId", -1L)?.takeIf { it != -1L }
                     LoginResult(
                         success = true,
                         token = data?.optString("token", ""),
-                        username = data?.optString("username", "") ?: ""
+                        username = data?.optString("username", "") ?: "",
+                        userId = userId
                     )
                 } else {
                     LoginResult(success = false, error = obj.optString("message", "验证失败"))

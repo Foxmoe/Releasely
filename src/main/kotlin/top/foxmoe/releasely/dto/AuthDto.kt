@@ -14,6 +14,7 @@ data class RegisterRequest(
 data class AuthResponse(
     val token: String,
     val username: String,
+    val userId: Long? = null,
     val requires2FA: Boolean = false
 )
 

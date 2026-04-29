@@ -108,11 +108,15 @@ fun LoginScreen(
                                 app.syncService.setAuthToken(token)
                                 app.securitySettingsService.setAuthToken(token)
                             }
-                                    context.getSharedPreferences("auth", android.content.Context.MODE_PRIVATE)
+                            context.getSharedPreferences("auth", android.content.Context.MODE_PRIVATE)
                                 .edit()
                                 .putString("token", result.token)
                                 .putString("username", result.username)
                                 .apply()
+                            result.userId?.let { uid ->
+                                context.getSharedPreferences("auth", android.content.Context.MODE_PRIVATE)
+                                    .edit().putLong("userId", uid).apply()
+                            }
                             onLoginSuccess()
                         }
                         else -> error = result.error ?: "登录失败"

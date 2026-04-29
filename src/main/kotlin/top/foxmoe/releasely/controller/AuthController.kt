@@ -46,7 +46,7 @@ class AuthController(
             }
 
             val token = jwtTokenProvider.createToken(request.username)
-            ResponseEntity.ok(ApiResponse.success(AuthResponse(token, user.username ?: request.username)))
+            ResponseEntity.ok(ApiResponse.success(AuthResponse(token, user.username ?: request.username, user.id)))
         } catch (e: Exception) {
             ResponseEntity.ok(ApiResponse.error(ResultCode.PASSWORD_ERROR))
         }
@@ -68,7 +68,7 @@ class AuthController(
         val settings = securityService.getOrCreateSettings(user.id!!)
         if (!settings.is2FAEnabled || securityService.verify2FA(user.id!!, request.totpCode)) {
             val token = jwtTokenProvider.createToken(username)
-            return ResponseEntity.ok(ApiResponse.success(AuthResponse(token, username)))
+            return ResponseEntity.ok(ApiResponse.success(AuthResponse(token, username, user.id)))
         }
 
         return ResponseEntity.ok(ApiResponse.error(ResultCode.`2FA_REQUIRED`))

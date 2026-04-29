@@ -14,6 +14,7 @@ import top.foxmoe.releasely.services.SecuritySettingsService
 import top.foxmoe.releasely.services.SyncMetaService
 import top.foxmoe.releasely.services.SyncService
 import top.foxmoe.releasely.services.WishlistService
+import top.foxmoe.releasely.services.HealthReportService
 
 class ReleaselyApp : Application() {
     lateinit var database: AppDatabase
@@ -27,6 +28,7 @@ class ReleaselyApp : Application() {
     lateinit var syncService: SyncService
     lateinit var securitySettingsService: SecuritySettingsService
     lateinit var reminderManager: MedicationReminderManager
+    lateinit var healthReportService: HealthReportService
 
     override fun onCreate() {
         super.onCreate()
@@ -45,6 +47,7 @@ class ReleaselyApp : Application() {
         syncService = SyncService(apiService, syncMetaService, activityService, cycleService, medicationService, partnerService)
         reminderManager = MedicationReminderManager(applicationContext)
         securitySettingsService = SecuritySettingsService(applicationContext, apiService)
+        healthReportService = HealthReportService(apiService)
     }
 
     /** 获取当前激活的用户资料，返回 null 表示未设置 */

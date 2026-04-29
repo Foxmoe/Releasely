@@ -382,34 +382,61 @@ fun MedicationReminderDialog(onDismiss: () -> Unit) {
 fun HealthReportDialog(onDismiss: () -> Unit) {
     val context = LocalContext.current
     val app = context.applicationContext as ReleaselyApp
+    val authPrefs = remember { context.getSharedPreferences("auth", android.content.Context.MODE_PRIVATE) }
+    val userId = remember { authPrefs.getLong("userId", -1L).takeIf { it != -1L } }
+
     var reportText by remember { mutableStateOf("正在生成...") }
+    var isLoading by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
-        val activities = app.activityService.getAllActivities()
-        val total = activities.size
-        val protected = activities.count { it.protection }
-        val rate = if (total > 0) (protected * 100 / total) else 0
-        val recent = activities.take(5)
-        reportText = buildString {
-            appendLine("=== 健康报告 ===")
-            appendLine("总记录数：$total")
-            appendLine("保护措施率：$rate%")
-            appendLine("")
-            if (recent.isNotEmpty()) {
-                appendLine("最近记录：")
-                recent.forEach {
-                    appendLine("· ${it.type} (${if (it.protection) "有保护" else "无保护"})")
-                }
-            } else {
-                appendLine("暂无记录，开始记录您的健康数据吧！")
+        val backendReport = userId?.let { uid ->
+            try {
+                app.healthReportService.generateReport(uid, "weekly")
+            } catch (e: Exception) {
+                null
             }
         }
+
+        reportText = if (backendReport != null) {
+            backendReport
+        } else {
+            val activities = app.activityService.getAllActivities()
+            val total = activities.size
+            val protected = activities.count { it.protection }
+            val rate = if (total > 0) (protected * 100 / total) else 0
+            val recent = activities.take(5)
+            buildString {
+                appendLine("=== 健康报告（本地统计）===")
+                appendLine("总记录数：$total")
+                appendLine("保护措施率：$rate%")
+                appendLine("")
+                if (recent.isNotEmpty()) {
+                    appendLine("最近记录：")
+                    recent.forEach {
+                        appendLine("· ${it.type} (${if (it.protection) "有保护" else "无保护"})")
+                    }
+                } else {
+                    appendLine("暂无记录，开始记录您的健康数据吧！")
+                }
+            }
+        }
+        isLoading = false
     }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("健康报告") },
-        text = { Text(reportText) },
+        text = {
+            if (isLoading) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("正在生成...")
+                }
+            } else {
+                Text(reportText)
+            }
+        },
         confirmButton = {
             TextButton(onClick = onDismiss) { Text("关闭") }
         }

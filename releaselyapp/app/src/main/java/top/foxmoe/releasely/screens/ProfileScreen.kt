@@ -199,7 +199,7 @@ fun ProfileScreen() {
                         "匿名反馈" -> showFeedbackScreen = true
                         "退出登录" -> {
                             if (isLoggedIn) {
-                                authPrefs.edit().remove("token").remove("username").apply()
+                                authPrefs.edit().remove("token").remove("username").remove("userId").apply()
                                 val app = context.applicationContext as ReleaselyApp
                                 app.apiService.setAuthToken(null)
                                 app.syncService.setAuthToken(null)
