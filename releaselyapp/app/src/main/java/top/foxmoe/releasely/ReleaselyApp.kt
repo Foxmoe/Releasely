@@ -13,6 +13,7 @@ import top.foxmoe.releasely.services.MedicationReminderManager
 import top.foxmoe.releasely.services.SecuritySettingsService
 import top.foxmoe.releasely.services.SyncMetaService
 import top.foxmoe.releasely.services.SyncService
+import top.foxmoe.releasely.services.WishlistService
 
 class ReleaselyApp : Application() {
     lateinit var database: AppDatabase
@@ -21,6 +22,7 @@ class ReleaselyApp : Application() {
     lateinit var cycleService: CycleService
     lateinit var medicationService: MedicationService
     lateinit var partnerService: PartnerService
+    lateinit var wishlistService: WishlistService
     lateinit var apiService: ApiService
     lateinit var syncService: SyncService
     lateinit var securitySettingsService: SecuritySettingsService
@@ -37,6 +39,7 @@ class ReleaselyApp : Application() {
         cycleService = CycleService(database)
         medicationService = MedicationService(database)
         partnerService = PartnerService(database)
+        wishlistService = WishlistService(database)
         apiService = ApiService()
         val syncMetaService = SyncMetaService(database)
         syncService = SyncService(apiService, syncMetaService, activityService, cycleService, medicationService, partnerService)

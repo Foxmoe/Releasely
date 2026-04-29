@@ -1,0 +1,35 @@
+CREATE TABLE Wishlist (
+    id TEXT NOT NULL PRIMARY KEY,
+    title TEXT NOT NULL,
+    description TEXT,
+    is_completed INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+);
+
+getAllWishes:
+SELECT * FROM Wishlist ORDER BY is_completed ASC, created_at DESC;
+
+getWishById:
+SELECT * FROM Wishlist WHERE id = ?;
+
+insertWish:
+INSERT INTO Wishlist(id, title, description, is_completed, created_at)
+VALUES (?, ?, ?, 0, strftime('%s', 'now'));
+
+updateWish:
+UPDATE Wishlist SET title = ?, description = ? WHERE id = ?;
+
+markWishCompleted:
+UPDATE Wishlist SET is_completed = 1 WHERE id = ?;
+
+markWishIncomplete:
+UPDATE Wishlist SET is_completed = 0 WHERE id = ?;
+
+deleteWish:
+DELETE FROM Wishlist WHERE id = ?;
+
+countWishes:
+SELECT COUNT(*) FROM Wishlist;
+
+countCompletedWishes:
+SELECT COUNT(*) FROM Wishlist WHERE is_completed = 1;

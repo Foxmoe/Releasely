@@ -30,6 +30,12 @@ fun PartnerScreen(
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
     var showInviteDialog by remember { mutableStateOf(false) }
+    var showWishlist by remember { mutableStateOf(false) }
+
+    if (showWishlist) {
+        WishlistScreen(onBack = { showWishlist = false })
+        return
+    }
 
     Column(
         modifier = Modifier
@@ -72,6 +78,18 @@ fun PartnerScreen(
                 Icon(Icons.Filled.Email, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("邀请绑定")
+            }
+        }
+
+        if (partners.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(12.dp))
+            Button(
+                onClick = { showWishlist = true },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9C27B0))
+            ) {
+                Text("愿望清单", fontSize = 14.sp)
             }
         }
 
