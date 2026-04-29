@@ -9,6 +9,7 @@ import top.foxmoe.releasely.services.CycleService
 import top.foxmoe.releasely.services.MedicationService
 import top.foxmoe.releasely.services.PartnerService
 import top.foxmoe.releasely.services.ApiService
+import top.foxmoe.releasely.services.MedicationReminderManager
 import top.foxmoe.releasely.services.SecuritySettingsService
 import top.foxmoe.releasely.services.SyncMetaService
 import top.foxmoe.releasely.services.SyncService
@@ -23,6 +24,7 @@ class ReleaselyApp : Application() {
     lateinit var apiService: ApiService
     lateinit var syncService: SyncService
     lateinit var securitySettingsService: SecuritySettingsService
+    lateinit var reminderManager: MedicationReminderManager
 
     override fun onCreate() {
         super.onCreate()
@@ -38,6 +40,7 @@ class ReleaselyApp : Application() {
         apiService = ApiService()
         val syncMetaService = SyncMetaService(database)
         syncService = SyncService(apiService, syncMetaService, activityService, cycleService, medicationService, partnerService)
+        reminderManager = MedicationReminderManager(applicationContext)
         securitySettingsService = SecuritySettingsService(applicationContext, apiService)
     }
 

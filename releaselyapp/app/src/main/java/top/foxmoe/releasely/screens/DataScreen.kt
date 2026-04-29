@@ -150,7 +150,8 @@ fun DataScreen() {
                 top.foxmoe.releasely.components.MedicationForm(
                     onSubmit = { name, dosage, reminderTime ->
                         GlobalScope.launch(Dispatchers.IO) {
-                            app.medicationService.insertMedication(name, dosage, reminderTime)
+                            val id = app.medicationService.insertMedication(name, dosage, reminderTime)
+                            app.reminderManager.scheduleReminder(id, name, dosage, reminderTime)
                         }
                         showMedicationForm = false
                     },

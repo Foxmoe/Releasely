@@ -2,6 +2,8 @@ package top.foxmoe.releasely.screens
 
 import android.content.Context
 import androidx.compose.foundation.layout.*
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -25,12 +27,24 @@ fun NotificationSettingsScreen(onBack: () -> Unit) {
     var cycleReminder by remember { mutableStateOf(prefs.getBoolean("cycle_reminder", true)) }
     var dailySummary by remember { mutableStateOf(prefs.getBoolean("daily_summary", false)) }
 
+    val reminderManager = remember { top.foxmoe.releasely.services.MedicationReminderManager(context) }
+
     fun save() {
         prefs.edit()
             .putBoolean("medication_reminder", medicationReminder)
             .putBoolean("cycle_reminder", cycleReminder)
             .putBoolean("daily_summary", dailySummary)
             .apply()
+    }
+
+    fun updateMedicationReminders(enabled: Boolean) {
+        if (enabled) {
+            kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                reminderManager.rescheduleAll()
+            }
+        } else {
+            reminderManager.cancelAll()
+        }
     }
 
     Column(
@@ -54,6 +68,7 @@ fun NotificationSettingsScreen(onBack: () -> Unit) {
             onCheckedChange = {
                 medicationReminder = it
                 save()
+                updateMedicationReminders(it)
             }
         )
 
