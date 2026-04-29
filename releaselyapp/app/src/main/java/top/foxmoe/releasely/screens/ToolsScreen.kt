@@ -450,16 +450,20 @@ fun HealthReportDialog(onDismiss: () -> Unit) {
 fun DataExportDialog(onDismiss: () -> Unit) {
     val context = LocalContext.current
     val app = context.applicationContext as ReleaselyApp
-    var exportStatus by remember { mutableStateOf("") }
+    var status by remember { mutableStateOf("") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("数据导出") },
+        title = { Text("数据备份") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("将导出所有本地记录为加密备份文件。")
-                if (exportStatus.isNotEmpty()) {
-                    Text(exportStatus, color = if (exportStatus.startsWith("成功")) Color(0xFF4CAF50) else Color.Red)
+                Text("导出所有本地记录为 JSON 备份文件，或从备份文件恢复数据。")
+                if (status.isNotEmpty()) {
+                    Text(status, color = when {
+                        status.startsWith("成功") -> Color(0xFF4CAF50)
+                        status.startsWith("恢复") -> Color(0xFF4CAF50)
+                        else -> Color.Red
+                    })
                 }
             }
         },
@@ -481,9 +485,9 @@ fun DataExportDialog(onDismiss: () -> Unit) {
                         }
                         val file = java.io.File(context.getExternalFilesDir(null), "releasely_backup.json")
                         file.writeText(json)
-                        exportStatus = "成功导出至：${file.absolutePath}"
+                        status = "成功导出至：${file.absolutePath}"
                     } catch (e: Exception) {
-                        exportStatus = "导出失败：${e.message}"
+                        status = "导出失败：${e.message}"
                     }
                 }
             }) {
@@ -491,7 +495,36 @@ fun DataExportDialog(onDismiss: () -> Unit) {
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("关闭") }
+            Row {
+                TextButton(onClick = {
+                    GlobalScope.launch(Dispatchers.IO) {
+                        try {
+                            val file = java.io.File(context.getExternalFilesDir(null), "releasely_backup.json")
+                            if (!file.exists()) {
+                                status = "恢复失败：未找到备份文件"
+                                return@launch
+                            }
+                            val json = file.readText()
+                            val regex = """\{\s*"date":\s*(\d+),\s*"type":\s*"([^"]+)",\s*"protection":\s*(true|false)\s*\}""".toRegex()
+                            val matches = regex.findAll(json)
+                            var count = 0
+                            matches.forEach { match ->
+                                val date = match.groupValues[1].toLong()
+                                val type = match.groupValues[2]
+                                val protection = match.groupValues[3].toBooleanStrictOrNull() ?: false
+                                app.activityService.insertActivity(date, type, protection, null, null, null, null)
+                                count++
+                            }
+                            status = "恢复成功：已恢复 $count 条记录"
+                        } catch (e: Exception) {
+                            status = "恢复失败：${e.message}"
+                        }
+                    }
+                }) {
+                    Text("恢复")
+                }
+                TextButton(onClick = onDismiss) { Text("关闭") }
+            }
         }
     )
 }
