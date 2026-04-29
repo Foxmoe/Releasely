@@ -12,6 +12,16 @@ sqldelight {
     }
 }
 
+// 基于 Git 提交数自动生成 versionCode，确保每次构建版本号递增
+val gitCommitCount = providers.exec {
+    commandLine("git", "rev-list", "--count", "HEAD")
+    workingDir = rootDir
+}.standardOutput.asText.get().trim().toInt()
+
+val versionMajor = 1
+val versionMinor = 0
+val versionPatch = gitCommitCount
+
 android {
     namespace = "top.foxmoe.releasely"
     compileSdk = 34
@@ -20,8 +30,8 @@ android {
         applicationId = "top.foxmoe.releasely"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = gitCommitCount
+        versionName = "$versionMajor.$versionMinor.$versionPatch"
     }
 
     buildTypes {
