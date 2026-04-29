@@ -23,6 +23,11 @@ class ApiService {
         .build()
 
     private val baseUrl = "http://10.0.2.2:8080/api"
+    private var authToken: String? = null
+
+    fun setAuthToken(token: String?) {
+        authToken = token
+    }
 
     suspend fun get(endpoint: String, token: String? = null): Result<String> =
         withContext(Dispatchers.IO) {

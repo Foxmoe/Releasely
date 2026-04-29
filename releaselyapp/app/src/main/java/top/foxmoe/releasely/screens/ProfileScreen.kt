@@ -33,12 +33,20 @@ import top.foxmoe.releasely.ReleaselyApp
 @Composable
 fun ProfileScreen() {
     val context = LocalContext.current
+    val authPrefs = remember { context.getSharedPreferences("auth", android.content.Context.MODE_PRIVATE) }
+    var isLoggedIn by remember { mutableStateOf(authPrefs.getString("token", null) != null) }
+
     var showPartnerScreen by remember { mutableStateOf(false) }
     var showSecurityScreen by remember { mutableStateOf(false) }
     var showPersonalProfile by remember { mutableStateOf(false) }
     var showNotificationSettings by remember { mutableStateOf(false) }
     var showPrivacySettings by remember { mutableStateOf(false) }
     var showAbout by remember { mutableStateOf(false) }
+    var showLoginScreen by remember { mutableStateOf(false) }
+    var showRegisterScreen by remember { mutableStateOf(false) }
+    var showTwoFactorScreen by remember { mutableStateOf(false) }
+    var twoFactorToken by remember { mutableStateOf("") }
+    var twoFactorUsername by remember { mutableStateOf("") }
 
     // 子页面导航栈处理
     when {
@@ -91,6 +99,57 @@ fun ProfileScreen() {
             AboutScreen(onBack = { showAbout = false })
             return
         }
+
+        showLoginScreen -> {
+            LoginScreen(
+                onBack = { showLoginScreen = false },
+                onLoginSuccess = {
+                    isLoggedIn = true
+                    showLoginScreen = false
+                },
+                onNeed2FA = { token, user ->
+                    twoFactorToken = token
+                    twoFactorUsername = user
+                    showLoginScreen = false
+                    showTwoFactorScreen = true
+                },
+                onRegisterClick = {
+                    showLoginScreen = false
+                    showRegisterScreen = true
+                }
+            )
+            return
+        }
+
+        showRegisterScreen -> {
+            RegisterScreen(
+                onBack = {
+                    showRegisterScreen = false
+                    showLoginScreen = true
+                },
+                onRegisterSuccess = {
+                    showRegisterScreen = false
+                    showLoginScreen = true
+                }
+            )
+            return
+        }
+
+        showTwoFactorScreen -> {
+            TwoFactorScreen(
+                preAuthToken = twoFactorToken,
+                username = twoFactorUsername,
+                onBack = {
+                    showTwoFactorScreen = false
+                    showLoginScreen = true
+                },
+                onVerifySuccess = {
+                    isLoggedIn = true
+                    showTwoFactorScreen = false
+                }
+            )
+            return
+        }
     }
 
     val menuItems = remember {
@@ -113,7 +172,7 @@ fun ProfileScreen() {
     ) {
         // 用户资料头部
         item {
-            ProfileHeader()
+            ProfileHeader(isLoggedIn = isLoggedIn, onLoginClick = { showLoginScreen = true })
             Spacer(modifier = Modifier.height(16.dp))
         }
 
@@ -131,7 +190,16 @@ fun ProfileScreen() {
                         "隐私设置" -> showPrivacySettings = true
                         "关于" -> showAbout = true
                         "退出登录" -> {
-                            // TODO: 清除登录状态并跳转
+                            if (isLoggedIn) {
+                                authPrefs.edit().remove("token").remove("username").apply()
+                                val app = context.applicationContext as ReleaselyApp
+                                app.apiService.setAuthToken(null)
+                                app.syncService.setAuthToken(null)
+                                app.securitySettingsService.setAuthToken(null)
+                                isLoggedIn = false
+                            } else {
+                                showLoginScreen = true
+                            }
                         }
                     }
                 }
@@ -144,7 +212,7 @@ fun ProfileScreen() {
  * 用户资料头部，展示头像和真实用户信息
  */
 @Composable
-fun ProfileHeader() {
+fun ProfileHeader(isLoggedIn: Boolean, onLoginClick: () -> Unit) {
     val context = LocalContext.current
     val app = context.applicationContext as ReleaselyApp
     var userName by remember { mutableStateOf("用户") }
@@ -175,9 +243,9 @@ fun ProfileHeader() {
             )
         }
         Spacer(modifier = Modifier.width(16.dp))
-        Column {
+        Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = userName,
+                text = if (isLoggedIn) userName else "未登录",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Medium,
                 color = Color.Black
@@ -188,6 +256,14 @@ fun ProfileHeader() {
                 fontSize = 14.sp,
                 color = Color.Gray
             )
+        }
+        if (!isLoggedIn) {
+            androidx.compose.material3.Button(
+                onClick = onLoginClick,
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text("登录", fontSize = 14.sp)
+            }
         }
     }
 }
