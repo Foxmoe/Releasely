@@ -1,33 +1,51 @@
 CREATE TABLE Partner (
     id TEXT NOT NULL PRIMARY KEY,
+    server_id TEXT,
     name TEXT NOT NULL,
     invite_code TEXT NOT NULL UNIQUE,
     status TEXT NOT NULL DEFAULT 'pending',
     shared_permissions TEXT,
-    created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+    is_deleted INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+    updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
 );
 
+CREATE INDEX IF NOT EXISTS idx_partner_server_id ON Partner(server_id);
+CREATE INDEX IF NOT EXISTS idx_partner_updated_at ON Partner(updated_at);
+
 getAllPartners:
-SELECT * FROM Partner ORDER BY created_at DESC;
+SELECT * FROM Partner WHERE is_deleted = 0 ORDER BY created_at DESC;
 
 getPartnerById:
 SELECT * FROM Partner WHERE id = ?;
+
+getPartnerByServerId:
+SELECT * FROM Partner WHERE server_id = ?;
 
 getPartnerByInviteCode:
 SELECT * FROM Partner WHERE invite_code = ?;
 
 insertPartner:
-INSERT INTO Partner(id, name, invite_code, status, shared_permissions, created_at)
-VALUES (?, ?, ?, 'pending', '{}', strftime('%s', 'now'));
+INSERT INTO Partner(id, server_id, name, invite_code, status, shared_permissions, is_deleted, created_at, updated_at)
+VALUES (?, ?, ?, ?, 'pending', '{}', 0, strftime('%s', 'now'), strftime('%s', 'now'));
 
 updatePartnerStatus:
-UPDATE Partner SET status = ? WHERE id = ?;
+UPDATE Partner SET status = ?, updated_at = strftime('%s', 'now') WHERE id = ?;
 
 updatePartnerPermissions:
-UPDATE Partner SET shared_permissions = ? WHERE id = ?;
+UPDATE Partner SET shared_permissions = ?, updated_at = strftime('%s', 'now') WHERE id = ?;
 
-deletePartner:
+markPartnerDeleted:
+UPDATE Partner SET is_deleted = 1, updated_at = strftime('%s', 'now') WHERE id = ?;
+
+deletePartnerPermanently:
 DELETE FROM Partner WHERE id = ?;
 
 countPartners:
-SELECT COUNT(*) FROM Partner;
+SELECT COUNT(*) FROM Partner WHERE is_deleted = 0;
+
+getPartnersUpdatedSince:
+SELECT * FROM Partner WHERE updated_at > ?;
+
+setServerId:
+UPDATE Partner SET server_id = ? WHERE id = ?;

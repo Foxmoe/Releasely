@@ -6,12 +6,14 @@ import java.util.UUID
 
 data class MedicationRecord(
     val id: String,
+    val serverId: String?,
     val name: String,
     val dosage: String,
     val reminderTime: Long,
     val lastTaken: Long?,
     val isActive: Boolean,
-    val createdAt: Long
+    val createdAt: Long,
+    val updatedAt: Long
 )
 
 class MedicationService(private val database: top.foxmoe.releasely.database.AppDatabase) {
@@ -20,12 +22,14 @@ class MedicationService(private val database: top.foxmoe.releasely.database.AppD
         database.medicationQueries.getAllMedications().executeAsList().map { row ->
             MedicationRecord(
                 id = row.id,
+                serverId = row.server_id,
                 name = row.name,
                 dosage = row.dosage,
                 reminderTime = row.reminder_time,
                 lastTaken = row.last_taken,
                 isActive = row.is_active == 1L,
-                createdAt = row.created_at
+                createdAt = row.created_at,
+                updatedAt = row.updated_at
             )
         }
     }
@@ -34,12 +38,30 @@ class MedicationService(private val database: top.foxmoe.releasely.database.AppD
         database.medicationQueries.getMedicationById(id).executeAsOneOrNull()?.let { row ->
             MedicationRecord(
                 id = row.id,
+                serverId = row.server_id,
                 name = row.name,
                 dosage = row.dosage,
                 reminderTime = row.reminder_time,
                 lastTaken = row.last_taken,
                 isActive = row.is_active == 1L,
-                createdAt = row.created_at
+                createdAt = row.created_at,
+                updatedAt = row.updated_at
+            )
+        }
+    }
+
+    suspend fun getMedicationByServerId(serverId: String): MedicationRecord? = withContext(Dispatchers.IO) {
+        database.medicationQueries.getMedicationByServerId(serverId).executeAsOneOrNull()?.let { row ->
+            MedicationRecord(
+                id = row.id,
+                serverId = row.server_id,
+                name = row.name,
+                dosage = row.dosage,
+                reminderTime = row.reminder_time,
+                lastTaken = row.last_taken,
+                isActive = row.is_active == 1L,
+                createdAt = row.created_at,
+                updatedAt = row.updated_at
             )
         }
     }
@@ -52,6 +74,7 @@ class MedicationService(private val database: top.foxmoe.releasely.database.AppD
         val id = UUID.randomUUID().toString()
         database.medicationQueries.insertMedication(
             id = id,
+            server_id = null,
             name = name,
             dosage = dosage,
             reminder_time = reminderTime
@@ -76,7 +99,7 @@ class MedicationService(private val database: top.foxmoe.releasely.database.AppD
     }
 
     suspend fun deleteMedication(id: String) = withContext(Dispatchers.IO) {
-        database.medicationQueries.deleteMedication(id)
+        database.medicationQueries.markMedicationInactive(id)
     }
 
     suspend fun markTaken(id: String) = withContext(Dispatchers.IO) {
@@ -87,14 +110,36 @@ class MedicationService(private val database: top.foxmoe.releasely.database.AppD
         database.medicationQueries.getActiveMedications().executeAsList().map { row ->
             MedicationRecord(
                 id = row.id,
+                serverId = row.server_id,
                 name = row.name,
                 dosage = row.dosage,
                 reminderTime = row.reminder_time,
                 lastTaken = row.last_taken,
                 isActive = row.is_active == 1L,
-                createdAt = row.created_at
+                createdAt = row.created_at,
+                updatedAt = row.updated_at
             )
         }
+    }
+
+    suspend fun getMedicationsUpdatedSince(since: Long): List<MedicationRecord> = withContext(Dispatchers.IO) {
+        database.medicationQueries.getMedicationsUpdatedSince(since).executeAsList().map { row ->
+            MedicationRecord(
+                id = row.id,
+                serverId = row.server_id,
+                name = row.name,
+                dosage = row.dosage,
+                reminderTime = row.reminder_time,
+                lastTaken = row.last_taken,
+                isActive = row.is_active == 1L,
+                createdAt = row.created_at,
+                updatedAt = row.updated_at
+            )
+        }
+    }
+
+    suspend fun setServerId(localId: String, serverId: String) = withContext(Dispatchers.IO) {
+        database.medicationQueries.setServerId(serverId, localId)
     }
 
     suspend fun getMedicationCount(): Long = withContext(Dispatchers.IO) {

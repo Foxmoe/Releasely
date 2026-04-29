@@ -6,11 +6,13 @@ import java.util.UUID
 
 data class CycleRecord(
     val id: String,
+    val serverId: String?,
     val startDate: Long,
     val duration: Int?,
     val predictedNext: Long?,
     val isDeleted: Boolean,
-    val createdAt: Long
+    val createdAt: Long,
+    val updatedAt: Long
 )
 
 class CycleService(private val database: top.foxmoe.releasely.database.AppDatabase) {
@@ -19,11 +21,13 @@ class CycleService(private val database: top.foxmoe.releasely.database.AppDataba
         database.cycleQueries.getAllCycles().executeAsList().map { row ->
             CycleRecord(
                 id = row.id,
+                serverId = row.server_id,
                 startDate = row.start_date,
                 duration = row.duration?.toInt(),
                 predictedNext = row.predicted_next,
                 isDeleted = row.is_deleted == 1L,
-                createdAt = row.created_at
+                createdAt = row.created_at,
+                updatedAt = row.updated_at
             )
         }
     }
@@ -32,11 +36,28 @@ class CycleService(private val database: top.foxmoe.releasely.database.AppDataba
         database.cycleQueries.getCycleById(id).executeAsOneOrNull()?.let { row ->
             CycleRecord(
                 id = row.id,
+                serverId = row.server_id,
                 startDate = row.start_date,
                 duration = row.duration?.toInt(),
                 predictedNext = row.predicted_next,
                 isDeleted = row.is_deleted == 1L,
-                createdAt = row.created_at
+                createdAt = row.created_at,
+                updatedAt = row.updated_at
+            )
+        }
+    }
+
+    suspend fun getCycleByServerId(serverId: String): CycleRecord? = withContext(Dispatchers.IO) {
+        database.cycleQueries.getCycleByServerId(serverId).executeAsOneOrNull()?.let { row ->
+            CycleRecord(
+                id = row.id,
+                serverId = row.server_id,
+                startDate = row.start_date,
+                duration = row.duration?.toInt(),
+                predictedNext = row.predicted_next,
+                isDeleted = row.is_deleted == 1L,
+                createdAt = row.created_at,
+                updatedAt = row.updated_at
             )
         }
     }
@@ -46,6 +67,7 @@ class CycleService(private val database: top.foxmoe.releasely.database.AppDataba
             val id = UUID.randomUUID().toString()
             database.cycleQueries.insertCycle(
                 id = id,
+                server_id = null,
                 start_date = startDate,
                 duration = duration?.toLong(),
                 predicted_next = predictedNext
@@ -64,20 +86,41 @@ class CycleService(private val database: top.foxmoe.releasely.database.AppDataba
         }
 
     suspend fun deleteCycle(id: String) = withContext(Dispatchers.IO) {
-        database.cycleQueries.deleteCycle(id)
+        database.cycleQueries.markCycleDeleted(id)
     }
 
     suspend fun getLatestCycle(): CycleRecord? = withContext(Dispatchers.IO) {
         database.cycleQueries.getLatestCycle().executeAsOneOrNull()?.let { row ->
             CycleRecord(
                 id = row.id,
+                serverId = row.server_id,
                 startDate = row.start_date,
                 duration = row.duration?.toInt(),
                 predictedNext = row.predicted_next,
                 isDeleted = row.is_deleted == 1L,
-                createdAt = row.created_at
+                createdAt = row.created_at,
+                updatedAt = row.updated_at
             )
         }
+    }
+
+    suspend fun getCyclesUpdatedSince(since: Long): List<CycleRecord> = withContext(Dispatchers.IO) {
+        database.cycleQueries.getCyclesUpdatedSince(since).executeAsList().map { row ->
+            CycleRecord(
+                id = row.id,
+                serverId = row.server_id,
+                startDate = row.start_date,
+                duration = row.duration?.toInt(),
+                predictedNext = row.predicted_next,
+                isDeleted = row.is_deleted == 1L,
+                createdAt = row.created_at,
+                updatedAt = row.updated_at
+            )
+        }
+    }
+
+    suspend fun setServerId(localId: String, serverId: String) = withContext(Dispatchers.IO) {
+        database.cycleQueries.setServerId(serverId, localId)
     }
 
     suspend fun getCycleCount(): Long = withContext(Dispatchers.IO) {

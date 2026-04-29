@@ -1,12 +1,17 @@
 CREATE TABLE Medication (
     id TEXT NOT NULL PRIMARY KEY,
+    server_id TEXT,
     name TEXT NOT NULL,
     dosage TEXT NOT NULL,
     reminder_time INTEGER NOT NULL,
     last_taken INTEGER,
     is_active INTEGER NOT NULL DEFAULT 1,
-    created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+    created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+    updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
 );
+
+CREATE INDEX IF NOT EXISTS idx_medication_server_id ON Medication(server_id);
+CREATE INDEX IF NOT EXISTS idx_medication_updated_at ON Medication(updated_at);
 
 getAllMedications:
 SELECT * FROM Medication WHERE is_active = 1 ORDER BY reminder_time ASC;
@@ -14,23 +19,35 @@ SELECT * FROM Medication WHERE is_active = 1 ORDER BY reminder_time ASC;
 getMedicationById:
 SELECT * FROM Medication WHERE id = ?;
 
+getMedicationByServerId:
+SELECT * FROM Medication WHERE server_id = ?;
+
 insertMedication:
-INSERT INTO Medication(id, name, dosage, reminder_time, last_taken, is_active, created_at)
-VALUES (?, ?, ?, ?, NULL, 1, strftime('%s', 'now'));
+INSERT INTO Medication(id, server_id, name, dosage, reminder_time, last_taken, is_active, created_at, updated_at)
+VALUES (?, ?, ?, ?, ?, NULL, 1, strftime('%s', 'now'), strftime('%s', 'now'));
 
 updateMedication:
 UPDATE Medication
-SET name = ?, dosage = ?, reminder_time = ?, last_taken = ?
+SET name = ?, dosage = ?, reminder_time = ?, last_taken = ?, updated_at = strftime('%s', 'now')
 WHERE id = ?;
 
-deleteMedication:
-UPDATE Medication SET is_active = 0 WHERE id = ?;
+markMedicationInactive:
+UPDATE Medication SET is_active = 0, updated_at = strftime('%s', 'now') WHERE id = ?;
+
+deleteMedicationPermanently:
+DELETE FROM Medication WHERE id = ?;
 
 markTaken:
-UPDATE Medication SET last_taken = strftime('%s', 'now') WHERE id = ?;
+UPDATE Medication SET last_taken = strftime('%s', 'now'), updated_at = strftime('%s', 'now') WHERE id = ?;
 
 getActiveMedications:
 SELECT * FROM Medication WHERE is_active = 1 ORDER BY reminder_time ASC;
 
+getMedicationsUpdatedSince:
+SELECT * FROM Medication WHERE updated_at > ?;
+
 countMedications:
 SELECT COUNT(*) FROM Medication WHERE is_active = 1;
+
+setServerId:
+UPDATE Medication SET server_id = ? WHERE id = ?;

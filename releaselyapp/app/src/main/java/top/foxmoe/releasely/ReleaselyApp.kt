@@ -10,6 +10,7 @@ import top.foxmoe.releasely.services.MedicationService
 import top.foxmoe.releasely.services.PartnerService
 import top.foxmoe.releasely.services.ApiService
 import top.foxmoe.releasely.services.SecuritySettingsService
+import top.foxmoe.releasely.services.SyncMetaService
 import top.foxmoe.releasely.services.SyncService
 
 class ReleaselyApp : Application() {
@@ -35,7 +36,8 @@ class ReleaselyApp : Application() {
         medicationService = MedicationService(database)
         partnerService = PartnerService(database)
         apiService = ApiService()
-        syncService = SyncService(apiService, activityService, cycleService, medicationService, partnerService)
+        val syncMetaService = SyncMetaService(database)
+        syncService = SyncService(apiService, syncMetaService, activityService, cycleService, medicationService, partnerService)
         securitySettingsService = SecuritySettingsService(applicationContext, apiService)
     }
 

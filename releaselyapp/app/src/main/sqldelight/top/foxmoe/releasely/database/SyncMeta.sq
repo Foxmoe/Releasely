@@ -1,0 +1,11 @@
+CREATE TABLE SyncMeta (
+    entity_type TEXT NOT NULL PRIMARY KEY,
+    last_synced_at INTEGER NOT NULL DEFAULT 0
+);
+
+getLastSync:
+SELECT last_synced_at FROM SyncMeta WHERE entity_type = ?;
+
+setLastSync:
+INSERT OR REPLACE INTO SyncMeta(entity_type, last_synced_at)
+VALUES (?, ?);

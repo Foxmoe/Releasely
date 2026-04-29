@@ -1,11 +1,16 @@
 CREATE TABLE Cycle (
     id TEXT NOT NULL PRIMARY KEY,
+    server_id TEXT,
     start_date INTEGER NOT NULL,
     duration INTEGER,
     predicted_next INTEGER,
     is_deleted INTEGER NOT NULL DEFAULT 0,
-    created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+    created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+    updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
 );
+
+CREATE INDEX IF NOT EXISTS idx_cycle_server_id ON Cycle(server_id);
+CREATE INDEX IF NOT EXISTS idx_cycle_updated_at ON Cycle(updated_at);
 
 getAllCycles:
 SELECT * FROM Cycle WHERE is_deleted = 0 ORDER BY start_date DESC;
@@ -13,20 +18,32 @@ SELECT * FROM Cycle WHERE is_deleted = 0 ORDER BY start_date DESC;
 getCycleById:
 SELECT * FROM Cycle WHERE id = ?;
 
+getCycleByServerId:
+SELECT * FROM Cycle WHERE server_id = ?;
+
 insertCycle:
-INSERT INTO Cycle(id, start_date, duration, predicted_next, is_deleted, created_at)
-VALUES (?, ?, ?, ?, 0, strftime('%s', 'now'));
+INSERT INTO Cycle(id, server_id, start_date, duration, predicted_next, is_deleted, created_at, updated_at)
+VALUES (?, ?, ?, ?, ?, 0, strftime('%s', 'now'), strftime('%s', 'now'));
 
 updateCycle:
 UPDATE Cycle
-SET start_date = ?, duration = ?, predicted_next = ?
+SET start_date = ?, duration = ?, predicted_next = ?, updated_at = strftime('%s', 'now')
 WHERE id = ?;
 
-deleteCycle:
-UPDATE Cycle SET is_deleted = 1 WHERE id = ?;
+markCycleDeleted:
+UPDATE Cycle SET is_deleted = 1, updated_at = strftime('%s', 'now') WHERE id = ?;
+
+deleteCyclePermanently:
+DELETE FROM Cycle WHERE id = ?;
 
 getLatestCycle:
 SELECT * FROM Cycle WHERE is_deleted = 0 ORDER BY start_date DESC LIMIT 1;
 
+getCyclesUpdatedSince:
+SELECT * FROM Cycle WHERE updated_at > ?;
+
 countCycles:
 SELECT COUNT(*) FROM Cycle WHERE is_deleted = 0;
+
+setServerId:
+UPDATE Cycle SET server_id = ? WHERE id = ?;
