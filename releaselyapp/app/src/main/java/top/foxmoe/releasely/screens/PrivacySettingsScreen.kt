@@ -23,6 +23,7 @@ fun PrivacySettingsScreen(onBack: () -> Unit) {
     var biometricUnlock by remember { mutableStateOf(prefs.getBoolean("biometric_unlock", false)) }
     var screenshotProtection by remember { mutableStateOf(prefs.getBoolean("screenshot_protection", true)) }
     var cloudSync by remember { mutableStateOf(prefs.getBoolean("cloud_sync", true)) }
+    var showClearConfirm by remember { mutableStateOf(false) }
 
     fun save() {
         prefs.edit()
@@ -88,15 +89,40 @@ fun PrivacySettingsScreen(onBack: () -> Unit) {
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = {
-                // 清除所有本地数据
-            },
+            onClick = { showClearConfirm = true },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF44336))
         ) {
             Text("清除所有本地数据")
         }
+    }
+
+    if (showClearConfirm) {
+        AlertDialog(
+            onDismissRequest = { showClearConfirm = false },
+            title = { Text("确认清除") },
+            text = { Text("此操作将删除所有本地记录、设置和用户资料，且无法恢复。确定继续吗？") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showClearConfirm = false
+                        context.getSharedPreferences("auth", Context.MODE_PRIVATE).edit().clear().apply()
+                        context.getSharedPreferences("privacy", Context.MODE_PRIVATE).edit().clear().apply()
+                        context.getSharedPreferences("notification", Context.MODE_PRIVATE).edit().clear().apply()
+                        context.deleteDatabase("releasely.db")
+                        (context as? android.app.Activity)?.finishAffinity()
+                    }
+                ) {
+                    Text("清除", color = Color(0xFFF44336))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearConfirm = false }) {
+                    Text("取消")
+                }
+            }
+        )
     }
 }
 
