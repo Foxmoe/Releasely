@@ -42,6 +42,7 @@ fun ProfileScreen() {
     var showNotificationSettings by remember { mutableStateOf(false) }
     var showPrivacySettings by remember { mutableStateOf(false) }
     var showAbout by remember { mutableStateOf(false) }
+    var showFeedbackScreen by remember { mutableStateOf(false) }
     var showLoginScreen by remember { mutableStateOf(false) }
     var showRegisterScreen by remember { mutableStateOf(false) }
     var showTwoFactorScreen by remember { mutableStateOf(false) }
@@ -97,6 +98,11 @@ fun ProfileScreen() {
 
         showAbout -> {
             AboutScreen(onBack = { showAbout = false })
+            return
+        }
+
+        showFeedbackScreen -> {
+            FeedbackScreen(onBack = { showFeedbackScreen = false })
             return
         }
 
@@ -159,6 +165,7 @@ fun ProfileScreen() {
             MenuItem("安全设置", Icons.Filled.Lock, Color(0xFFFF9800)),
             MenuItem("通知设置", Icons.Filled.Notifications, Color(0xFFE91E63)),
             MenuItem("隐私设置", Icons.Filled.Edit, Color(0xFF607D8B)),
+            MenuItem("匿名反馈", Icons.Filled.MailOutline, Color(0xFF00BCD4)),
             MenuItem("关于", Icons.Filled.Info, Color(0xFF9E9E9E)),
             MenuItem("退出登录", Icons.Filled.ExitToApp, Color(0xFFF44336))
         )
@@ -189,6 +196,7 @@ fun ProfileScreen() {
                         "通知设置" -> showNotificationSettings = true
                         "隐私设置" -> showPrivacySettings = true
                         "关于" -> showAbout = true
+                        "匿名反馈" -> showFeedbackScreen = true
                         "退出登录" -> {
                             if (isLoggedIn) {
                                 authPrefs.edit().remove("token").remove("username").apply()
