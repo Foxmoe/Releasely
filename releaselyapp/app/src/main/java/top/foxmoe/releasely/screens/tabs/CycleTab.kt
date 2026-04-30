@@ -5,11 +5,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +38,7 @@ fun CycleTab(onAddClick: () -> Unit) {
 
     var cycles by remember { mutableStateOf<List<top.foxmoe.releasely.services.CycleRecord>>(emptyList()) }
     var activities by remember { mutableStateOf<List<top.foxmoe.releasely.services.ActivityRecord>>(emptyList()) }
+    var selectedDate by remember { mutableStateOf<java.time.LocalDate?>(null) }
 
     LaunchedEffect(Unit) {
         cycles = app.cycleService.getAllCycles()
@@ -72,7 +75,7 @@ fun CycleTab(onAddClick: () -> Unit) {
                 markedDates = markedDates,
                 cycleStartDate = cycleStartDate,
                 cycleDuration = cycleDuration,
-                onDateClick = { /* TODO: 点击日期展示当日详情 */ }
+                onDateClick = { date -> selectedDate = date }
             )
         }
 
@@ -116,6 +119,49 @@ fun CycleTab(onAddClick: () -> Unit) {
                 symptoms = ""
             )
         }
+    }
+
+    selectedDate?.let { date ->
+        val dayActivities = activities.filter { activity ->
+            val instant = Instant.ofEpochSecond(activity.date)
+            val activityDate = instant.atZone(ZoneId.systemDefault()).toLocalDate()
+            activityDate == date
+        }
+        val dayCycles = cycles.filter { cycle ->
+            val start = Instant.ofEpochSecond(cycle.startDate).atZone(ZoneId.systemDefault()).toLocalDate()
+            val end = start.plusDays((cycle.duration ?: 5).toLong())
+            !date.isBefore(start) && !date.isAfter(end)
+        }
+
+        AlertDialog(
+            onDismissRequest = { selectedDate = null },
+            title = { Text("${date.monthValue}月${date.dayOfMonth}日") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (dayActivities.isNotEmpty()) {
+                        Text("行为记录：", fontWeight = FontWeight.Medium)
+                        dayActivities.forEach { activity ->
+                            Text("· ${activity.type} (${if (activity.protection) "有保护" else "无保护"})", fontSize = 14.sp)
+                        }
+                    }
+                    if (dayCycles.isNotEmpty()) {
+                        if (dayActivities.isNotEmpty()) Spacer(modifier = Modifier.height(8.dp))
+                        Text("月经周期：", fontWeight = FontWeight.Medium)
+                        dayCycles.forEach { cycle ->
+                            Text("· 月经期 (${cycle.duration ?: 5}天)", fontSize = 14.sp)
+                        }
+                    }
+                    if (dayActivities.isEmpty() && dayCycles.isEmpty()) {
+                        Text("当天无记录", color = Color.Gray)
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { selectedDate = null }) {
+                    Text("关闭")
+                }
+            }
+        )
     }
 }
 
