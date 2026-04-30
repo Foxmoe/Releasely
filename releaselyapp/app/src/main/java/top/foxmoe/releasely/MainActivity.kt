@@ -40,7 +40,7 @@ class MainActivity : FragmentActivity() {
         val queries = app.profileQueries
 
         setContent {
-            MaterialTheme {
+            ReleaselyTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background

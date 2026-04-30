@@ -11,11 +11,13 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -200,13 +202,24 @@ fun ProfileScreen() {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        contentPadding = PaddingValues(top = 24.dp, bottom = 16.dp)
     ) {
         // 用户资料头部
         item {
             ProfileHeader(isLoggedIn = isLoggedIn, onLoginClick = { showLoginScreen = true })
-            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        // 功能分区标题
+        item {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "功能",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
 
         // 菜单列表
@@ -258,45 +271,70 @@ fun ProfileHeader(isLoggedIn: Boolean, onLoginClick: () -> Unit) {
         recordDays = app.activityService.getActivityCount().toInt()
     }
 
-    Row(
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
         Box(
             modifier = Modifier
-                .size(72.dp)
-                .clip(CircleShape)
-                .background(Color(0xFFBBDEFB)),
-            contentAlignment = Alignment.Center
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(
+                            Color(0xFF9C27B0),
+                            Color(0xFFE91E63)
+                        )
+                    ),
+                    shape = RoundedCornerShape(20.dp)
+                )
+                .padding(24.dp)
         ) {
-            Text(
-                text = userName.take(1).ifEmpty { "用" },
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
-        }
-        Spacer(modifier = Modifier.width(16.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = if (isLoggedIn) userName else "未登录",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color.Black
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "已记录 $recordDays 天",
-                fontSize = 14.sp,
-                color = Color.Gray
-            )
-        }
-        if (!isLoggedIn) {
-            androidx.compose.material3.Button(
-                onClick = onLoginClick,
-                shape = RoundedCornerShape(8.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("登录", fontSize = 14.sp)
+                Box(
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.2f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = userName.take(1).ifEmpty { "用" },
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = if (isLoggedIn) userName else "未登录",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = if (isLoggedIn) "已记录 $recordDays 天" else "登录后同步云端数据",
+                        fontSize = 13.sp,
+                        color = Color.White.copy(alpha = 0.8f)
+                    )
+                }
+                if (!isLoggedIn) {
+                    androidx.compose.material3.Button(
+                        onClick = onLoginClick,
+                        shape = RoundedCornerShape(10.dp),
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                            containerColor = Color.White,
+                            contentColor = Color(0xFF9C27B0)
+                        )
+                    ) {
+                        Text("登录", fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                    }
+                }
             }
         }
     }

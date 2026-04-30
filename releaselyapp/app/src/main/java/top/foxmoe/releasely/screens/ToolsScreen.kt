@@ -1,5 +1,6 @@
 package top.foxmoe.releasely.screens
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,6 +14,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -29,10 +32,6 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
-/**
- * 工具页：展示各类健康计算工具的入口卡片
- * 根据性别过滤工具列表（男性不显示月经周期相关工具）
- */
 @Composable
 fun ToolsScreen() {
     val context = LocalContext.current
@@ -51,7 +50,7 @@ fun ToolsScreen() {
         allTools.add(ToolItem("药物提醒", Icons.Filled.Notifications, Color(0xFFFF9800), ToolType.MedicationReminder))
         allTools.add(ToolItem("健康报告", Icons.Filled.Info, Color(0xFF4CAF50), ToolType.HealthReport))
         allTools.add(ToolItem("知识库", Icons.Filled.Search, Color(0xFF795548), ToolType.KnowledgeBase))
-        allTools.add(ToolItem("数据导出", Icons.Filled.Send, Color(0xFF2196F3), ToolType.DataExport))
+        allTools.add(ToolItem("数据备份", Icons.Filled.Send, Color(0xFF2196F3), ToolType.DataExport))
         allTools.toList()
     }
 
@@ -59,20 +58,26 @@ fun ToolsScreen() {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(top = 24.dp, bottom = 16.dp)
         ) {
             item {
                 Text(
                     text = "实用工具",
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Light,
-                    color = Color.Black
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "健康管理，从工具开始",
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            // 每行展示 2 个工具卡片
             items(tools.chunked(2)) { rowTools ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -85,7 +90,6 @@ fun ToolsScreen() {
                             onClick = { selectedTool = tool }
                         )
                     }
-                    // 补齐空位，保证布局对齐
                     if (rowTools.size == 1) {
                         Spacer(modifier = Modifier.weight(1f))
                     }
@@ -93,7 +97,6 @@ fun ToolsScreen() {
             }
         }
 
-        // 工具详情弹窗
         selectedTool?.let { tool ->
             ToolDetailDialog(
                 tool = tool,
@@ -134,39 +137,52 @@ fun ToolCard(
     onClick: () -> Unit
 ) {
     Card(
-        modifier = modifier.height(120.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = tool.color.copy(alpha = 0.1f)),
-        onClick = onClick
+        modifier = modifier.height(130.dp),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = tool.color.copy(alpha = 0.06f)),
+        onClick = onClick,
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+        Box(
+            modifier = Modifier.fillMaxSize()
         ) {
+            // 装饰性背景圆
             Box(
                 modifier = Modifier
-                    .size(48.dp)
+                    .size(80.dp)
+                    .offset(x = 60.dp, y = (-20).dp)
                     .clip(CircleShape)
-                    .background(tool.color.copy(alpha = 0.2f)),
-                contentAlignment = Alignment.Center
+                    .background(tool.color.copy(alpha = 0.06f))
+            )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                Icon(
-                    imageVector = tool.icon,
-                    contentDescription = null,
-                    tint = tool.color,
-                    modifier = Modifier.size(24.dp)
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(tool.color.copy(alpha = 0.12f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = tool.icon,
+                        contentDescription = null,
+                        tint = tool.color,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = tool.title,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = tool.title,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color.Black
-            )
         }
     }
 }

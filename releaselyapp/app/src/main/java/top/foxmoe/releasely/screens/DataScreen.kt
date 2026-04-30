@@ -1,24 +1,11 @@
 package top.foxmoe.releasely.screens
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -30,17 +17,13 @@ import top.foxmoe.releasely.screens.tabs.ActivityTab
 import top.foxmoe.releasely.screens.tabs.CycleTab
 import top.foxmoe.releasely.screens.tabs.HealthTab
 
-/**
- * 数据记录页：包含行为、周期（仅限女性）、健康三个子 Tab，支持添加各类记录
- * 男性用户不显示周期 Tab
- */
 @Composable
 fun DataScreen() {
-    val context = LocalContext.current
+    val context = androidx.compose.ui.platform.LocalContext.current
     val app = context.applicationContext as ReleaselyApp
     val isFemale = remember { app.isFemale() }
 
-    var selectedTab by remember { mutableIntStateOf(0) }
+    var selectedTab by remember { androidx.compose.runtime.mutableIntStateOf(0) }
     var showActivityForm by remember { mutableStateOf(false) }
     var showCycleForm by remember { mutableStateOf(false) }
     var showMedicationForm by remember { mutableStateOf(false) }
@@ -54,31 +37,44 @@ fun DataScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(horizontal = 16.dp)
     ) {
-        // 页面标题
+        Spacer(modifier = Modifier.height(24.dp))
         Text(
             text = "数据记录",
             fontSize = 28.sp,
             fontWeight = FontWeight.Light,
-            color = Color.Black
+            color = MaterialTheme.colorScheme.onBackground
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "记录你的健康生活",
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(20.dp))
 
         // Tab 切换栏
         TabRow(
             selectedTabIndex = selectedTab,
-            containerColor = Color.Transparent,
-            contentColor = Color.Black
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(40.dp),
+            divider = {}
         ) {
             tabs.forEachIndexed { index, title ->
+                val isSelected = selectedTab == index
                 Tab(
-                    selected = selectedTab == index,
+                    selected = isSelected,
                     onClick = { selectedTab = index },
                     text = {
                         Text(
                             text = title,
-                            fontWeight = if (selectedTab == index) FontWeight.Medium else FontWeight.Normal
+                            fontSize = 13.sp,
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 )
@@ -87,21 +83,18 @@ fun DataScreen() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 根据选中 Tab 展示对应内容
         when {
             selectedTab == 0 -> ActivityTab(
                 onAddClick = { showActivityForm = true }
             )
             isFemale && selectedTab == 1 -> CycleTab(onAddClick = { showCycleForm = true })
-            // 女性：健康是 tab 2；男性：健康是 tab 1
             (isFemale && selectedTab == 2) || (!isFemale && selectedTab == 1) -> HealthTab(
                 onAddClick = { showMedicationForm = true },
-                onMarkTaken = { /* 服用逻辑已在 HealthTab 内处理 */ }
+                onMarkTaken = { }
             )
         }
     }
 
-    // 行为记录添加弹窗
     if (showActivityForm) {
         AlertDialog(
             onDismissRequest = { showActivityForm = false },
@@ -122,7 +115,6 @@ fun DataScreen() {
         )
     }
 
-    // 周期记录添加弹窗（仅女性）
     if (showCycleForm && isFemale) {
         AlertDialog(
             onDismissRequest = { showCycleForm = false },
@@ -141,7 +133,6 @@ fun DataScreen() {
         )
     }
 
-    // 药物记录添加弹窗
     if (showMedicationForm) {
         AlertDialog(
             onDismissRequest = { showMedicationForm = false },
