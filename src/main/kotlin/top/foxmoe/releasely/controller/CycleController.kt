@@ -2,6 +2,7 @@ package top.foxmoe.releasely.controller
 
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import top.foxmoe.releasely.annotation.AuditLog
 import top.foxmoe.releasely.dto.*
 import top.foxmoe.releasely.entity.Cycle
 import top.foxmoe.releasely.service.CycleService
@@ -24,6 +25,7 @@ class CycleController(private val cycleService: CycleService) {
         return ResponseEntity.ok(ApiResponse.success(cycle))
     }
 
+    @AuditLog(action = "CYCLE_CREATE", resourceType = "CYCLE")
     @PostMapping
     fun createCycle(@RequestBody request: CreateCycleRequest): ResponseEntity<ApiResponse<Cycle>> {
         val cycle = Cycle(
@@ -36,6 +38,7 @@ class CycleController(private val cycleService: CycleService) {
         return ResponseEntity.ok(ApiResponse.success(createdCycle))
     }
 
+    @AuditLog(action = "CYCLE_UPDATE", resourceType = "CYCLE")
     @PutMapping("/{id}")
     fun updateCycle(
         @PathVariable id: Long,
@@ -51,6 +54,7 @@ class CycleController(private val cycleService: CycleService) {
         return ResponseEntity.ok(ApiResponse.success(existingCycle))
     }
 
+    @AuditLog(action = "CYCLE_DELETE", resourceType = "CYCLE")
     @DeleteMapping("/{id}")
     fun deleteCycle(@PathVariable id: Long): ResponseEntity<ApiResponse<Nothing>> {
         val success = cycleService.deleteCycle(id)

@@ -105,7 +105,6 @@ class SyncService(
 
     fun sync(userId: Long, request: SyncRequest): SyncResponse {
         val serverTimestamp = LocalDateTime.now()
-        val pendingRecords = mutableListOf<SyncRecord>()
         val conflicts = mutableListOf<SyncConflictDto>()
 
         request.pendingRecords?.forEach { recordDto ->

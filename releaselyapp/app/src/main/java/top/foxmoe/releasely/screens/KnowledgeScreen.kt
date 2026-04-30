@@ -1,7 +1,9 @@
 package top.foxmoe.releasely.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -10,11 +12,12 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -243,6 +246,13 @@ val knowledgeArticles = listOf(
     )
 )
 
+private fun categoryLabel(cat: KnowledgeCategory): String = when (cat) {
+    KnowledgeCategory.Safety -> "安全"
+    KnowledgeCategory.Health -> "健康"
+    KnowledgeCategory.Psychology -> "心理"
+    KnowledgeCategory.Relationship -> "关系"
+}
+
 @Composable
 fun KnowledgeScreen(onBack: () -> Unit) {
     var selectedArticle by remember { mutableStateOf<KnowledgeArticle?>(null) }
@@ -255,26 +265,54 @@ fun KnowledgeScreen(onBack: () -> Unit) {
         return
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.Filled.ArrowBack, contentDescription = "返回")
+    Column(modifier = Modifier.fillMaxSize()) {
+        // 渐变头部
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFF4CAF50),
+                            Color(0xFF4CAF50).copy(alpha = 0.85f)
+                        )
+                    )
+                )
+                .padding(top = 16.dp, bottom = 24.dp)
+        ) {
+            Column {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            Icons.Filled.ArrowBack,
+                            contentDescription = "返回",
+                            tint = Color.White
+                        )
+                    }
+                    Text(
+                        text = "知识库",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "学习性健康知识，保护自己和伴侣",
+                    fontSize = 14.sp,
+                    color = Color.White.copy(alpha = 0.85f),
+                    modifier = Modifier.padding(start = 16.dp)
+                )
             }
-            Text(
-                text = "知识库",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(start = 8.dp)
-            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        LazyColumn(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+            contentPadding = PaddingValues(bottom = 24.dp)
+        ) {
             items(knowledgeArticles.size) { index ->
                 val article = knowledgeArticles[index]
                 ArticleCard(article = article, onClick = { selectedArticle = article })
@@ -288,8 +326,9 @@ private fun ArticleCard(article: KnowledgeArticle, onClick: () -> Unit) {
     @OptIn(ExperimentalMaterial3Api::class)
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFFAFAFA)),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         onClick = onClick
     ) {
         Row(
@@ -301,30 +340,45 @@ private fun ArticleCard(article: KnowledgeArticle, onClick: () -> Unit) {
             Box(
                 modifier = Modifier
                     .size(48.dp)
-                    .padding(8.dp),
+                    .clip(CircleShape)
+                    .background(article.color.copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = article.icon,
                     contentDescription = null,
                     tint = article.color,
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(26.dp)
                 )
             }
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(14.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = article.title,
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.Black
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = article.summary,
                     fontSize = 13.sp,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2
                 )
+                Spacer(modifier = Modifier.height(6.dp))
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = article.color.copy(alpha = 0.1f)
+                ) {
+                    Text(
+                        text = categoryLabel(article.category),
+                        fontSize = 11.sp,
+                        color = article.color,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                    )
+                }
             }
         }
     }
@@ -332,32 +386,56 @@ private fun ArticleCard(article: KnowledgeArticle, onClick: () -> Unit) {
 
 @Composable
 private fun ArticleDetailScreen(article: KnowledgeArticle, onBack: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.Filled.ArrowBack, contentDescription = "返回")
+    Column(modifier = Modifier.fillMaxSize()) {
+        // 文章详情头部
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            article.color,
+                            article.color.copy(alpha = 0.8f)
+                        )
+                    )
+                )
+                .padding(top = 16.dp, bottom = 24.dp)
+        ) {
+            Column {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            Icons.Filled.ArrowBack,
+                            contentDescription = "返回",
+                            tint = Color.White
+                        )
+                    }
+                    Text(
+                        text = article.title,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = article.summary,
+                    fontSize = 13.sp,
+                    color = Color.White.copy(alpha = 0.85f),
+                    modifier = Modifier.padding(start = 16.dp)
+                )
             }
-            Text(
-                text = article.title,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(start = 8.dp)
-            )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        LazyColumn {
+        LazyColumn(
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
+        ) {
             item {
                 Text(
                     text = article.content,
                     fontSize = 15.sp,
-                    lineHeight = 22.sp,
-                    color = Color(0xFF333333)
+                    lineHeight = 24.sp,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
         }

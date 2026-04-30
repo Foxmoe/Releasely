@@ -404,8 +404,11 @@ fun HealthReportDialog(onDismiss: () -> Unit) {
     val authPrefs = remember { context.getSharedPreferences("auth", android.content.Context.MODE_PRIVATE) }
     val userId = remember { authPrefs.getLong("userId", -1L).takeIf { it != -1L } }
 
+    var selectedTab by remember { mutableStateOf(0) }
     var reportText by remember { mutableStateOf("正在生成...") }
+    var insights by remember { mutableStateOf<List<HealthInsightDto>?>(null) }
     var isLoading by remember { mutableStateOf(true) }
+    var currentReportId by remember { mutableStateOf<Long?>(null) }
 
     LaunchedEffect(Unit) {
         val backendReport = userId?.let { uid ->
@@ -416,15 +419,17 @@ fun HealthReportDialog(onDismiss: () -> Unit) {
             }
         }
 
-        reportText = if (backendReport != null) {
-            backendReport
+        if (backendReport != null) {
+            currentReportId = backendReport.reportId.takeIf { it > 0 }
+            reportText = backendReport.reportText
         } else {
+            currentReportId = null
             val activities = app.activityService.getAllActivities()
             val total = activities.size
             val protected = activities.count { it.protection }
             val rate = if (total > 0) (protected * 100 / total) else 0
             val recent = activities.take(5)
-            buildString {
+            reportText = buildString {
                 appendLine("=== 健康报告（本地统计）===")
                 appendLine("总记录数：$total")
                 appendLine("保护措施率：$rate%")
@@ -442,9 +447,38 @@ fun HealthReportDialog(onDismiss: () -> Unit) {
         isLoading = false
     }
 
+    // 加载 AI 建议
+    LaunchedEffect(selectedTab, currentReportId) {
+        if (selectedTab == 1 && currentReportId != null && insights == null) {
+            val result = app.healthReportService.getInsights(currentReportId!!)
+            insights = result
+        }
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("健康报告") },
+        title = {
+            Column {
+                Text("健康报告")
+                if (!isLoading && currentReportId != null) {
+                    TabRow(
+                        selectedTabIndex = selectedTab,
+                        modifier = Modifier.padding(top = 8.dp)
+                    ) {
+                        Tab(
+                            selected = selectedTab == 0,
+                            onClick = { selectedTab = 0 },
+                            text = { Text("报告", fontSize = 12.sp) }
+                        )
+                        Tab(
+                            selected = selectedTab == 1,
+                            onClick = { selectedTab = 1 },
+                            text = { Text("AI 建议", fontSize = 12.sp) }
+                        )
+                    }
+                }
+            }
+        },
         text = {
             if (isLoading) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -453,7 +487,30 @@ fun HealthReportDialog(onDismiss: () -> Unit) {
                     Text("正在生成...")
                 }
             } else {
-                Text(reportText)
+                when {
+                    selectedTab == 1 && currentReportId != null -> {
+                        // AI 建议 tab
+                        if (insights == null) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                CircularProgressIndicator(modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("正在生成 AI 建议...")
+                            }
+                        } else if (insights!!.isEmpty()) {
+                            Text("暂无 AI 建议，请先生成报告。")
+                        } else {
+                            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                items(insights!!) { insight ->
+                                    InsightCard(insight)
+                                }
+                            }
+                        }
+                    }
+                    else -> {
+                        // 报告 tab
+                        Text(reportText)
+                    }
+                }
             }
         },
         confirmButton = {
@@ -463,10 +520,63 @@ fun HealthReportDialog(onDismiss: () -> Unit) {
 }
 
 @Composable
+fun InsightCard(insight: HealthInsightDto) {
+    val (icon, color) = when (insight.category) {
+        "protection" -> Icons.Filled.Shield to Color(0xFF4CAF50)
+        "cycle" -> Icons.Filled.DateRange to Color(0xFFE91E63)
+        "medication" -> Icons.Filled.Medication to Color(0xFFFF9800)
+        else -> Icons.Filled.Info to Color(0xFF2196F3)
+    }
+    val priorityLabel = when (insight.priority) {
+        1 -> "高优先级"
+        2 -> "中优先级"
+        else -> "建议"
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.08f)),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.Top
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = color,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            Column {
+                Text(
+                    text = priorityLabel,
+                    fontSize = 11.sp,
+                    color = color,
+                    fontWeight = FontWeight.Medium
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = insight.insightText,
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
+    }
+}
+
+@Composable
 fun DataExportDialog(onDismiss: () -> Unit) {
     val context = LocalContext.current
     val app = context.applicationContext as ReleaselyApp
     var status by remember { mutableStateOf("") }
+    var isExporting by remember { mutableStateOf(false) }
+
+    // Get auth token for cloud export
+    val authPrefs = remember { context.getSharedPreferences("auth", android.content.Context.MODE_PRIVATE) }
+    val token = remember { authPrefs.getString("token", null) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -474,6 +584,13 @@ fun DataExportDialog(onDismiss: () -> Unit) {
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("导出所有本地记录为 JSON 备份文件，或从备份文件恢复数据。")
+                if (token != null) {
+                    Text(
+                        text = "已登录云端账户，可使用\"云端导出\"获取完整数据",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
                 if (status.isNotEmpty()) {
                     Text(status, color = when {
                         status.startsWith("成功") -> Color(0xFF4CAF50)
@@ -507,11 +624,36 @@ fun DataExportDialog(onDismiss: () -> Unit) {
                     }
                 }
             }) {
-                Text("导出")
+                Text("导出本地")
             }
         },
         dismissButton = {
             Row {
+                if (token != null) {
+                    TextButton(
+                        onClick = {
+                            isExporting = true
+                            status = "正在从云端导出..."
+                            GlobalScope.launch(Dispatchers.IO) {
+                                try {
+                                    val result = app.authService.exportData(token)
+                                    if (result.success && result.filePath != null) {
+                                        status = "云端导出成功：${result.filePath}"
+                                    } else {
+                                        status = "云端导出失败：${result.error ?: "未知错误"}"
+                                    }
+                                } catch (e: Exception) {
+                                    status = "云端导出失败：${e.message}"
+                                } finally {
+                                    isExporting = false
+                                }
+                            }
+                        },
+                        enabled = !isExporting
+                    ) {
+                        Text(if (isExporting) "导出中..." else "云端导出")
+                    }
+                }
                 TextButton(onClick = {
                     GlobalScope.launch(Dispatchers.IO) {
                         try {

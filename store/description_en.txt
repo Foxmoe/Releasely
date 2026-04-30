@@ -1,0 +1,18 @@
+起飞了么 (Releasely) — Your private sexual health companion.
+
+Track cycles, reminders & health with absolute privacy. Science-based insights, no judgment.
+
+---SHORT DESCRIPTION (150 chars)---
+Private sexual health tracker with cycle prediction, medication reminders & partner sharing.
+
+---FULL DESCRIPTION (500 chars)---
+腾飞了么是一款专为现代人设计的性健康伴侣应用。我们采用科学视角，通过智能记录、健康预警、伴侣互动与专业教育四大核心支柱，帮助用户全面掌控自己的性健康状态。
+
+核心功能：
+- 智能打卡：记录性行为类型、保护措施、愉悦度及身体状况
+- 月经周期预测：内置女性月经周期预测与可视化日历
+- 健康守护：药物提醒、漏服补救、避孕助手、STI检测管理
+- 伴侣互动：邀请伴侣共享私密日历、维护愿望清单
+- 数据洞察：自动生成周/月/年健康总结与趋势分析
+- 极致隐私：AES加密、界面伪装、应用锁、一键销毁、2FA验证
+- 离线优先：无网络也能安全使用核心功能

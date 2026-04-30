@@ -2,6 +2,7 @@ package top.foxmoe.releasely.controller
 
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import top.foxmoe.releasely.annotation.AuditLog
 import top.foxmoe.releasely.dto.*
 import top.foxmoe.releasely.entity.Medication
 import top.foxmoe.releasely.service.MedicationService
@@ -35,6 +36,7 @@ class MedicationController(private val medicationService: MedicationService) {
         return ResponseEntity.ok(ApiResponse.success(medication))
     }
 
+    @AuditLog(action = "MEDICATION_CREATE", resourceType = "MEDICATION")
     @PostMapping
     fun createMedication(@RequestBody request: CreateMedicationRequest): ResponseEntity<ApiResponse<Medication>> {
         val medication = Medication(
@@ -48,6 +50,7 @@ class MedicationController(private val medicationService: MedicationService) {
         return ResponseEntity.ok(ApiResponse.success(createdMedication))
     }
 
+    @AuditLog(action = "MEDICATION_UPDATE", resourceType = "MEDICATION")
     @PutMapping("/{id}")
     fun updateMedication(
         @PathVariable id: Long,
@@ -65,6 +68,7 @@ class MedicationController(private val medicationService: MedicationService) {
         return ResponseEntity.ok(ApiResponse.success(existingMedication))
     }
 
+    @AuditLog(action = "MEDICATION_DELETE", resourceType = "MEDICATION")
     @DeleteMapping("/{id}")
     fun deleteMedication(@PathVariable id: Long): ResponseEntity<ApiResponse<Nothing>> {
         val success = medicationService.deleteMedication(id)
@@ -75,6 +79,7 @@ class MedicationController(private val medicationService: MedicationService) {
         }
     }
 
+    @AuditLog(action = "MEDICATION_TAKEN", resourceType = "MEDICATION")
     @PostMapping("/taken")
     fun recordTaken(@RequestBody request: MedicationTakenRequest): ResponseEntity<ApiResponse<Nothing>> {
         val success = medicationService.recordTaken(request.id)

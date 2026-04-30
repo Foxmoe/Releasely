@@ -14,9 +14,9 @@ class HealthReportService(private val apiService: ApiService) {
      * 向后端请求生成健康报告
      * @param userId 当前登录用户 ID
      * @param reportType "weekly" 或 "monthly"
-     * @return 后端返回的报告文本摘要，失败返回 null
+     * @return 后端返回的报告文本摘要和报告 ID，失败返回 null
      */
-    suspend fun generateReport(userId: Long, reportType: String = "weekly"): String? = withContext(Dispatchers.IO) {
+    suspend fun generateReport(userId: Long, reportType: String = "weekly"): ReportResult? = withContext(Dispatchers.IO) {
         try {
             val json = JSONObject().apply {
                 put("userId", userId)
@@ -28,6 +28,7 @@ class HealthReportService(private val apiService: ApiService) {
                 val code = obj.optInt("code", 500)
                 if (code == 200) {
                     val data = obj.optJSONObject("data")
+                    val reportId = data?.optLong("id", 0L) ?: 0L
                     val period = data?.optString("period", "")
                     val protectionRate = data?.optDouble("protectionRate", 0.0) ?: 0.0
                     val frequencyData = data?.optString("frequencyData", "{}") ?: "{}"
@@ -37,7 +38,7 @@ class HealthReportService(private val apiService: ApiService) {
                     val unprotected = fd.optInt("unprotected", 0)
                     val avgPleasure = fd.optDouble("averagePleasure", 0.0)
 
-                    buildString {
+                    val reportText = buildString {
                         appendLine("=== 健康报告 ===")
                         appendLine("统计周期：$period")
                         appendLine("总记录数：$total")
@@ -48,6 +49,41 @@ class HealthReportService(private val apiService: ApiService) {
                             appendLine("平均愉悦度：${String.format("%.1f", avgPleasure)}")
                         }
                     }
+                    ReportResult(reportText, reportId)
+                } else {
+                    null
+                }
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    /**
+     * 向后端请求 AI 健康建议
+     * @param reportId 健康报告 ID
+     * @return 健康建议列表，失败返回 null
+     */
+    suspend fun getInsights(reportId: Long): List<HealthInsightDto>? = withContext(Dispatchers.IO) {
+        try {
+            val response = apiService.get("/health-reports/$reportId/insights")
+            response.getOrNull()?.let { jsonString ->
+                val obj = JSONObject(jsonString)
+                val code = obj.optInt("code", 500)
+                if (code == 200) {
+                    val dataArray = obj.optJSONArray("data") ?: return@let null
+                    val insights = mutableListOf<HealthInsightDto>()
+                    for (i in 0 until dataArray.length()) {
+                        val item = dataArray.getJSONObject(i)
+                        insights.add(
+                            HealthInsightDto(
+                                insightText = item.optString("insightText", ""),
+                                category = item.optString("category", "general"),
+                                priority = item.optInt("priority", 3)
+                            )
+                        )
+                    }
+                    insights
                 } else {
                     null
                 }
@@ -57,3 +93,20 @@ class HealthReportService(private val apiService: ApiService) {
         }
     }
 }
+
+/**
+ * 健康报告结果
+ */
+data class ReportResult(
+    val reportText: String,
+    val reportId: Long
+)
+
+/**
+ * 健康建议 DTO
+ */
+data class HealthInsightDto(
+    val insightText: String,
+    val category: String,
+    val priority: Int
+)

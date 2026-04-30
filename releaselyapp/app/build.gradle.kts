@@ -79,6 +79,20 @@ android {
             } else {
                 signingConfig = signingConfigs.getByName("debug")
             }
+            // 生产环境使用 HTTPS 域名
+            buildConfigField("String", "API_BASE_URL", "\"https://api.releasely.example.com/api\"")
+            buildConfigField("boolean", "CERT_PINNING_ENABLED", "true")
+            buildConfigField("String", "CERT_PIN", "\"sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\"")
+            // release 构建禁止明文 HTTP，仅允许 HTTPS
+            manifestPlaceholders["usesCleartextTraffic"] = "false"
+        }
+        debug {
+            // 开发环境使用 HTTP（Android 模拟器访问本机 10.0.2.2）
+            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8080/api\"")
+            buildConfigField("boolean", "CERT_PINNING_ENABLED", "false")
+            buildConfigField("String", "CERT_PIN", "\"\"")
+            // debug 构建允许明文 HTTP（Android 9+ 默认禁止）
+            manifestPlaceholders["usesCleartextTraffic"] = "true"
         }
     }
 
@@ -92,9 +106,16 @@ android {
         jvmTarget = "17"
     }
 
+    testOptions {
+        unitTests.all {
+            it.useJUnitPlatform()
+        }
+    }
+
     // 如果使用 Compose，需要开启
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.8"
@@ -124,4 +145,16 @@ dependencies {
     implementation("androidx.biometric:biometric:1.1.0")
 
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+
+    // --- Test dependencies ---
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
+    testImplementation("org.junit.platform:junit-platform-launcher:1.10.1")
+    testImplementation("io.mockk:mockk:1.13.9")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+
+    // Android instrumented test dependencies
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
 }

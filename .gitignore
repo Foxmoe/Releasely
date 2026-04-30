@@ -42,3 +42,7 @@ out/
 ### JVM Crash Logs ###
 hs_err_pid*.log
 replay_pid*.log
+
+### Environment & Local Config ###
+.env
+application-local.yml

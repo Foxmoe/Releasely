@@ -17,7 +17,26 @@ data class PartnerRecord(
     val updatedAt: Long
 )
 
-class PartnerService(private val database: top.foxmoe.releasely.database.AppDatabase) {
+data class CreateInviteCodeResponse(
+    val inviteCode: String,
+    val inviteLink: String
+)
+
+data class InvitePartnerRequest(
+    val userId: Long,
+    val partnerInviteCode: String,
+    val sharedPermissions: String = "calendar,records"
+)
+
+data class AcceptInviteRequest(
+    val inviteCode: String,
+    val userId: Long
+)
+
+class PartnerService(
+    private val database: top.foxmoe.releasely.database.AppDatabase,
+    private val apiService: ApiService
+) {
 
     private val random = Random()
 
@@ -138,5 +157,79 @@ class PartnerService(private val database: top.foxmoe.releasely.database.AppData
     private fun generateInviteCode(): String {
         val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
         return (1..6).map { chars[random.nextInt(chars.length)] }.joinToString("")
+    }
+
+    /**
+     * Create an invite code on the server and return the invite code and link
+     */
+    suspend fun invitePartner(userId: Long): Result<CreateInviteCodeResponse> = withContext(Dispatchers.IO) {
+        try {
+            val request = InvitePartnerRequest(userId = userId, partnerInviteCode = "")
+            val response = apiService.post("/api/partners/invite", json = request.toJson())
+            response.fold(
+                onSuccess = { json ->
+                    val data = parseApiResponse<CreateInviteCodeResponse>(json)
+                    if (data != null) {
+                        Result.success(data)
+                    } else {
+                        Result.failure(Exception("Failed to parse response"))
+                    }
+                },
+                onFailure = { Result.failure(it) }
+            )
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Accept an invite using the invite code
+     */
+    suspend fun acceptInvite(inviteCode: String, userId: Long): Result<Boolean> = withContext(Dispatchers.IO) {
+        try {
+            val request = AcceptInviteRequest(inviteCode = inviteCode, userId = userId)
+            val response = apiService.post("/api/partners/accept", json = request.toJson())
+            response.fold(
+                onSuccess = { json ->
+                    val data = parseApiResponse<Any>(json)
+                    Result.success(data != null)
+                },
+                onFailure = { Result.failure(it) }
+            )
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    private fun InvitePartnerRequest.toJson(): String {
+        return """{"userId":$userId,"partnerInviteCode":"$partnerInviteCode","sharedPermissions":"$sharedPermissions"}"""
+    }
+
+    private fun AcceptInviteRequest.toJson(): String {
+        return """{"inviteCode":"$inviteCode","userId":$userId}"""
+    }
+
+    private inline fun <reified T> parseApiResponse(json: String): T? {
+        return try {
+            // Simple JSON parsing - extract data field
+            val dataMatch = Regex(""""data"\s*:\s*(\{[^}]*\})""").find(json)
+            dataMatch?.groupValues?.get(1)?.let { dataStr ->
+                when (T::class) {
+                    CreateInviteCodeResponse::class -> {
+                        val codeMatch = Regex(""""inviteCode"\s*:\s*"([^"]*)"""").find(dataStr)
+                        val linkMatch = Regex(""""inviteLink"\s*:\s*"([^"]*)"""").find(dataStr)
+                        if (codeMatch != null && linkMatch != null) {
+                            CreateInviteCodeResponse(
+                                inviteCode = codeMatch.groupValues[1],
+                                inviteLink = linkMatch.groupValues[1]
+                            ) as T
+                        } else null
+                    }
+                    else -> null
+                }
+            }
+        } catch (e: Exception) {
+            null
+        }
     }
 }

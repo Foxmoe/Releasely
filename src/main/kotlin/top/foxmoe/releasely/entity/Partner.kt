@@ -11,7 +11,9 @@ data class Partner(
     var id: Long? = null,
     var userId: Long? = null,
     var partnerId: Long? = null,
+    var inviteCode: String? = null,
     var status: String? = null,
     var sharedPermissions: String? = null,
+    var calendarSharingEnabled: Boolean = false,
     var createdAt: LocalDateTime? = null
 )

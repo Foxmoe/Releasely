@@ -2,25 +2,60 @@ spring:
   application:
     name: Releasely
 
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
   datasource:
     url: jdbc:mariadb://45.144.137.209:3306/releasely_db?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-    username: releasely
-    password: releaselyOhFuckMECummingONmyFace
+    username: ${DB_USERNAME:releasely}
+    password: ${DB_PASSWORD}
     driver-class-name: org.mariadb.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+      max-lifetime: 1200000
 
   jpa:
     hibernate:
       ddl-auto: none
     show-sql: true
+    properties:
+      hibernate:
+        jdbc:
+          fetch_size: 100
+        default_batch_fetch_size: 50
 
   flyway:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
 
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain
+    min-response-size: 1024
+
+server:
+  # SSL 配置：支持直接 SSL 或反向代理（Nginx/Caddy）转发
+  # 当使用反向代理时，保持 port 为 8080 且不配置 ssl，由代理层处理 HTTPS
+  # 当直接暴露服务时，启用 ssl 并指定 keystore
+  port: ${SERVER_PORT:8080}
+  ssl:
+    enabled: ${SSL_ENABLED:false}
+    key-store: ${SSL_KEYSTORE_PATH:}
+    key-store-password: ${SSL_KEYSTORE_PASSWORD:}
+    key-store-type: ${SSL_KEYSTORE_TYPE:PKCS12}
+    key-alias: ${SSL_KEY_ALIAS:}
+  # 信任反向代理的 X-Forwarded-* 头，用于在反向代理后正确识别 HTTPS 请求
+  forward-headers-strategy: ${SERVER_FORWARD_HEADERS_STRATEGY:native}
+
 app:
   encryption:
-    master-key: ${ENCRYPTION_MASTER_KEY:default-master-key-change-in-production}
+    master-key: ${ENCRYPTION_MASTER_KEY}
+  signature:
+    key: ${API_SIGNATURE_KEY}
 
 logging:
   level:

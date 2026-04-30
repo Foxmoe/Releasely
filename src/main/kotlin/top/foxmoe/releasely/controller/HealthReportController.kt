@@ -3,6 +3,7 @@ package top.foxmoe.releasely.controller
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import top.foxmoe.releasely.annotation.AuditLog
 import top.foxmoe.releasely.dto.*
 import top.foxmoe.releasely.entity.HealthReport
 import top.foxmoe.releasely.service.HealthReportService
@@ -37,6 +38,7 @@ class HealthReportController(
         return ResponseEntity.ok(ApiResponse.success(report))
     }
 
+    @AuditLog(action = "HEALTH_REPORT_GENERATE", resourceType = "HEALTH_REPORT")
     @PostMapping("/generate")
     fun generateReport(@RequestBody request: GenerateReportRequest): ResponseEntity<ApiResponse<HealthReport>> {
         val report = when (request.reportType.lowercase()) {
@@ -47,6 +49,7 @@ class HealthReportController(
         return ResponseEntity.ok(ApiResponse.success(report))
     }
 
+    @AuditLog(action = "HEALTH_REPORT_CREATE", resourceType = "HEALTH_REPORT")
     @PostMapping
     fun createReport(@RequestBody request: CreateHealthReportRequest): ResponseEntity<ApiResponse<HealthReport>> {
         val report = HealthReport(
@@ -60,6 +63,7 @@ class HealthReportController(
         return ResponseEntity.ok(ApiResponse.success(createdReport))
     }
 
+    @AuditLog(action = "HEALTH_REPORT_UPDATE", resourceType = "HEALTH_REPORT")
     @PutMapping("/{id}")
     fun updateReport(
         @PathVariable id: Long,
@@ -76,6 +80,7 @@ class HealthReportController(
         return ResponseEntity.ok(ApiResponse.success(existingReport))
     }
 
+    @AuditLog(action = "HEALTH_REPORT_DELETE", resourceType = "HEALTH_REPORT")
     @DeleteMapping("/{id}")
     fun deleteReport(@PathVariable id: Long): ResponseEntity<ApiResponse<Nothing>> {
         val success = healthReportService.deleteReport(id)
@@ -107,5 +112,14 @@ class HealthReportController(
         )
 
         return ResponseEntity.ok(ApiResponse.success(summary))
+    }
+
+    @GetMapping("/{id}/insights")
+    fun getHealthInsights(@PathVariable id: Long): ResponseEntity<ApiResponse<List<HealthInsight>>> {
+        val report = healthReportService.getReportById(id)
+            ?: return ResponseEntity.ok(ApiResponse.error(ResultCode.NOT_FOUND))
+
+        val insights = healthReportService.generateAIInsights(id)
+        return ResponseEntity.ok(ApiResponse.success(insights))
     }
 }

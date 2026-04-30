@@ -11,6 +11,13 @@
 
 <br>
 
+## 下载应用
+
+[![Google Play](https://img.shields.io/badge/Google%20Play-下载-4285F4?logo=google-play)]()
+[![App Store](https://img.shields.io/badge/App%20Store-下载-000000?logo=apple)]()
+
+<br>
+
 [//]: # (<div>)
 
 [//]: # (<img src="https://img.shields.io/github/v/release/AstrBotDevs/AstrBot?color=76bad9" href="https://github.com/AstrBotDevs/AstrBot/releases/latest">)
@@ -44,19 +51,32 @@
 
 起飞了么 (Releasely) 是一款专为现代人打造的多端同步性健康管理应用。我们摒弃传统的道德评判与单一打卡模式，采用科学的视角，通过智能记录、健康预警、伴侣互动与专业教育四大核心支柱，帮助用户全面掌控自己的性健康状态，构建更安全、愉悦、透明的亲密关系。
 
-[//]: # ()
-[//]: # (![screenshot_1 5x_postspark_2026-02-27_22-37-45]&#40;https://github.com/user-attachments/assets/f17cdb90-52d7-4773-be2e-ff64b566af6b&#41;)
+## 应用截图
+
+| 首页 | 记录 | 日历 | 健康报告 | 设置 |
+|:---:|:---:|:---:|:---:|:---:|
+| <img width="984" height="1746" alt="Dashboard" src="https://github.com/user-attachments/assets/f17cdb90-52d7-4773-be2e-ff64b566af6b" /> | <img width="976" height="1612" alt="Record" src="https://github.com/user-attachments/assets/89196061-3290-458d-b51f-afa178049f84" /> | <img width="974" height="1732" alt="Calendar" src="https://github.com/user-attachments/assets/e22a3968-87d7-4708-a7cd-e7f198c7c32e" /> | <img width="976" height="1734" alt="Report" src="https://github.com/user-attachments/assets/0952b395-6b4a-432a-8a50-c294b7f89750" /> | <img width="984" height="1746" alt="Settings" src="https://github.com/user-attachments/assets/c449acd838c41d0915cc08a3824025b1" /> |
 
 ## 核心功能
 
-1. 📝 **智能记录与科学打卡**：支持记录性行为类型（自慰/伴侣/边缘）、保护措施、愉悦度及身体状况，内置女性月经周期预测与可视化日历视图。
-2. 🛡️ **全方位健康与安全守护**：提供药物服用提醒、漏服补救指南、避孕助手、STI 检测周期管理及疫苗记录，主动预警健康风险。
-3. 💑 **伴侣互动与亲密空间**：支持邀请伴侣加入，共享私密日历、维护愿望清单、进行匿名反馈及参与亲密挑战（含特殊玩法提示）。
-4. 📊 **数据洞察与健康报告**：自动生成周/月/年度健康总结，分析频率与保护率趋势，高级版提供 AI 驱动的个性化健康建议。
-5. 📚 **知识库与教育资源**：收录科学性教育内容粉碎误区，提供检测机构、友好诊所及心理咨询师等资源地图查询。
-6. 🔒 **极致隐私与安全架构**：具备应用锁、界面伪装、本地 AES 加密、传输加密、一键数据销毁及 2FA 双重验证功能。
-7. 📱 **全平台多端同步**：基于 Flutter 构建，完美支持 iOS、Android、Windows、macOS 及 Linux，数据云端实时同步。
-8. 🌐 **离线优先模式**：核心记录与健康查询功能无需联网即可使用，确保在无网络环境下依然安全可用。
+1. 智能记录与科学打卡：支持记录性行为类型（自慰/伴侣/边缘）、保护措施、愉悦度及身体状况，内置女性月经周期预测与可视化日历视图。
+2. 全方位健康与安全守护：提供药物服用提醒、漏服补救指南、避孕助手、STI 检测周期管理及疫苗记录，主动预警健康风险。
+3. 伴侣互动与亲密空间：支持邀请伴侣加入，共享私密日历、维护愿望清单、进行匿名反馈及参与亲密挑战（含特殊玩法提示）。
+4. 数据洞察与健康报告：自动生成周/月/年度健康总结，分析频率与保护率趋势，高级版提供 AI 驱动的个性化健康建议。
+5. 知识库与教育资源：收录科学性教育内容粉碎误区，提供检测机构、友好诊所及心理咨询师等资源地图查询。
+6. 极致隐私与安全架构：具备应用锁、界面伪装、本地 AES 加密、传输加密、一键数据销毁及 2FA 双重验证功能。
+7. 全平台多端同步：基于 Flutter 构建，完美支持 iOS、Android、Windows、macOS 及 Linux，数据云端实时同步。
+8. 离线优先模式：核心记录与健康查询功能无需联网即可使用，确保在无网络环境下依然安全可用。
+
+## 应用商店素材
+
+如需在应用商店上架，请参考 [store/](store/) 目录下的相关文件：
+
+- [store/description_en.txt](store/description_en.txt) — Google Play 英文描述
+- [store/description_zh.txt](store/description_zh.txt) — App Store/Google Play 中文描述
+- [store/feature_graphics.md](store/feature_graphics.md) — 应用商店素材清单与尺寸要求
+- [store/privacy_policy.md](store/privacy_policy.md) — 完整隐私政策文本
+- [store/release_checklist.md](store/release_checklist.md) — 上架前检查清单
 
 [//]: # (<br>)
 

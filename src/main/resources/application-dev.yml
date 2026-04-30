@@ -1,0 +1,12 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+server:
+  port: 8080
+  ssl:
+    enabled: false
+
+# 开发环境：允许 HTTP，关闭证书校验（仅本地开发）
+# Android 端使用 http://10.0.2.2:8080 访问本机服务

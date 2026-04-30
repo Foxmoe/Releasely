@@ -15,7 +15,8 @@ data class AuthResponse(
     val token: String,
     val username: String,
     val userId: Long? = null,
-    val requires2FA: Boolean = false
+    val requires2FA: Boolean = false,
+    val refreshToken: String? = null
 )
 
 data class TwoFactorSetupResponse(
@@ -26,6 +27,10 @@ data class TwoFactorSetupResponse(
 data class TwoFactorLoginRequest(
     val preAuthToken: String,
     val totpCode: String
+)
+
+data class RefreshTokenRequest(
+    val refreshToken: String
 )
 
 data class TwoFactorVerifyRequest(

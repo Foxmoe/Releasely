@@ -44,6 +44,16 @@ data class HealthReportListResponse(
     val total: Int
 )
 
+/**
+ * 健康建议 DTO
+ * 用于返回基于规则的 AI 健康建议
+ */
+data class HealthInsight(
+    val insightText: String,
+    val category: String,      // "protection" | "cycle" | "medication" | "general"
+    val priority: Int         // 1=高, 2=中, 3=低
+)
+
 enum class ReportType {
     WEEKLY,
     MONTHLY

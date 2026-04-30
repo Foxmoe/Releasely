@@ -5,6 +5,7 @@ import app.cash.sqldelight.driver.android.AndroidSqliteDriver
 import top.foxmoe.releasely.database.AppDatabase
 import top.foxmoe.releasely.database.ProfileQueries
 import top.foxmoe.releasely.services.ActivityService
+import top.foxmoe.releasely.services.AuthService
 import top.foxmoe.releasely.services.CycleService
 import top.foxmoe.releasely.services.MedicationService
 import top.foxmoe.releasely.services.PartnerService
@@ -25,6 +26,7 @@ class ReleaselyApp : Application() {
     lateinit var partnerService: PartnerService
     lateinit var apiService: ApiService
     lateinit var securitySettingsService: SecuritySettingsService
+    lateinit var authService: AuthService
 
     // 延迟初始化非关键服务，减少冷启动时间
     val wishlistService by lazy { WishlistService(database) }
@@ -45,9 +47,10 @@ class ReleaselyApp : Application() {
         activityService = ActivityService(database)
         cycleService = CycleService(database)
         medicationService = MedicationService(database)
-        partnerService = PartnerService(database)
-        apiService = ApiService()
+        apiService = ApiService.getInstance(applicationContext)
+        partnerService = PartnerService(database, apiService)
         securitySettingsService = SecuritySettingsService(applicationContext, apiService)
+        authService = AuthService(apiService)
     }
 
     /** 获取当前激活的用户资料，返回 null 表示未设置 */

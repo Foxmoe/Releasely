@@ -2,6 +2,7 @@ package top.foxmoe.releasely.controller
 
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import top.foxmoe.releasely.annotation.AuditLog
 import top.foxmoe.releasely.dto.*
 import top.foxmoe.releasely.entity.ActivityRecord
 import top.foxmoe.releasely.mapper.ActivityRecordMapper
@@ -31,6 +32,7 @@ class ActivityController(
     }
 
     @Suppress("NewApi")
+    @AuditLog(action = "ACTIVITY_CREATE", resourceType = "ACTIVITY")
     @PostMapping
     fun create(@RequestBody request: CreateActivityRequest): ResponseEntity<ApiResponse<ActivityDto>> {
         val record = ActivityRecord(
@@ -48,6 +50,7 @@ class ActivityController(
         return ResponseEntity.ok(ApiResponse.success(record.toDto()))
     }
 
+    @AuditLog(action = "ACTIVITY_UPDATE", resourceType = "ACTIVITY")
     @PutMapping
     fun update(@RequestBody request: UpdateActivityRequest): ResponseEntity<ApiResponse<ActivityDto>> {
         val record = activityMapper.selectById(request.id)
@@ -64,6 +67,7 @@ class ActivityController(
         return ResponseEntity.ok(ApiResponse.success(record.toDto()))
     }
 
+    @AuditLog(action = "ACTIVITY_DELETE", resourceType = "ACTIVITY")
     @DeleteMapping("/{id}")
     fun delete(@PathVariable id: Long): ResponseEntity<ApiResponse<String>> {
         val record = activityMapper.selectById(id)

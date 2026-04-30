@@ -12,10 +12,14 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import top.foxmoe.releasely.security.JwtAuthenticationFilter
+import top.foxmoe.releasely.security.RequestSignatureFilter
 
 @Configuration
 @EnableWebSecurity
-class SecurityConfig(private val jwtAuthenticationFilter: JwtAuthenticationFilter) {
+class SecurityConfig(
+    private val jwtAuthenticationFilter: JwtAuthenticationFilter,
+    private val requestSignatureFilter: RequestSignatureFilter
+) {
 
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
@@ -23,11 +27,14 @@ class SecurityConfig(private val jwtAuthenticationFilter: JwtAuthenticationFilte
             .csrf { it.disable() }
             .authorizeHttpRequests {
                 it.requestMatchers("/api/auth/**").permitAll()
+                it.requestMatchers("/api/privacy/admin/**").hasRole("ADMIN")
                 it.anyRequest().authenticated()
             }
             .sessionManagement {
                 it.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             }
+            // 签名验证在 JWT 之前执行，确保请求未被篡改
+            .addFilterBefore(requestSignatureFilter, UsernamePasswordAuthenticationFilter::class.java)
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
 
         return http.build()
@@ -43,4 +50,3 @@ class SecurityConfig(private val jwtAuthenticationFilter: JwtAuthenticationFilte
         return authenticationConfiguration.authenticationManager
     }
 }
-

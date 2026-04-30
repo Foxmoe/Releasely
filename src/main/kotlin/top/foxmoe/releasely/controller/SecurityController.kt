@@ -2,6 +2,7 @@ package top.foxmoe.releasely.controller
 
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import top.foxmoe.releasely.annotation.AuditLog
 import top.foxmoe.releasely.dto.*
 import top.foxmoe.releasely.entity.SecuritySettings
 import top.foxmoe.releasely.service.SecurityService
@@ -16,6 +17,7 @@ class SecurityController(private val securityService: SecurityService) {
         return ResponseEntity.ok(ApiResponse.success(settings.toDto()))
     }
 
+    @AuditLog(action = "SECURITY_SETTINGS_UPDATE", resourceType = "SECURITY")
     @PutMapping("/settings")
     fun updateSettings(@RequestBody request: UpdateSecuritySettingsRequest): ResponseEntity<ApiResponse<SecuritySettingsDto>> {
         val settings = securityService.getOrCreateSettings(request.userId)
@@ -30,6 +32,7 @@ class SecurityController(private val securityService: SecurityService) {
         return ResponseEntity.ok(ApiResponse.success(settings.toDto()))
     }
 
+    @AuditLog(action = "PIN_SET", resourceType = "SECURITY")
     @PostMapping("/pin/set")
     fun setPin(@RequestBody request: SetPinRequest): ResponseEntity<ApiResponse<String>> {
         val success = securityService.setPin(request.userId, request.pin)
@@ -40,6 +43,7 @@ class SecurityController(private val securityService: SecurityService) {
         }
     }
 
+    @AuditLog(action = "PIN_VERIFY", resourceType = "SECURITY")
     @PostMapping("/pin/verify")
     fun verifyPin(@RequestBody request: VerifyPinRequest): ResponseEntity<ApiResponse<PinVerificationResponse>> {
         val result = securityService.verifyPin(request.userId, request.pin)
@@ -50,6 +54,7 @@ class SecurityController(private val securityService: SecurityService) {
         )))
     }
 
+    @AuditLog(action = "PIN_REMOVE", resourceType = "SECURITY")
     @DeleteMapping("/pin")
     fun removePin(@RequestParam userId: Long): ResponseEntity<ApiResponse<String>> {
         val success = securityService.removePin(userId)
@@ -60,6 +65,7 @@ class SecurityController(private val securityService: SecurityService) {
         }
     }
 
+    @AuditLog(action = "DISGUISE_ENABLE", resourceType = "SECURITY")
     @PostMapping("/disguise/enable")
     fun enableDisguise(@RequestParam userId: Long, @RequestParam disguiseType: String): ResponseEntity<ApiResponse<String>> {
         val success = securityService.enableDisguise(userId, disguiseType)
@@ -70,6 +76,7 @@ class SecurityController(private val securityService: SecurityService) {
         }
     }
 
+    @AuditLog(action = "DISGUISE_DISABLE", resourceType = "SECURITY")
     @PostMapping("/disguise/disable")
     fun disableDisguise(@RequestParam userId: Long): ResponseEntity<ApiResponse<String>> {
         val success = securityService.disableDisguise(userId)
@@ -80,6 +87,7 @@ class SecurityController(private val securityService: SecurityService) {
         }
     }
 
+    @AuditLog(action = "SCREENSHOT_PROTECTION_SET", resourceType = "SECURITY")
     @PostMapping("/screenshot")
     fun setScreenshotProtection(@RequestParam userId: Long, @RequestParam enabled: Boolean): ResponseEntity<ApiResponse<String>> {
         val success = securityService.setScreenshotProtection(userId, enabled)
@@ -90,6 +98,7 @@ class SecurityController(private val securityService: SecurityService) {
         }
     }
 
+    @AuditLog(action = "2FA_SETUP", resourceType = "SECURITY")
     @PostMapping("/2fa/setup")
     fun setup2FA(@RequestBody request: Setup2FARequest): ResponseEntity<ApiResponse<TwoFactorSetupResponse>> {
         val result = securityService.setup2FA(request.userId, request.username)
@@ -99,6 +108,7 @@ class SecurityController(private val securityService: SecurityService) {
         )))
     }
 
+    @AuditLog(action = "2FA_ENABLE", resourceType = "SECURITY")
     @PostMapping("/2fa/enable")
     fun enable2FA(@RequestBody request: Enable2FARequest): ResponseEntity<ApiResponse<String>> {
         val success = securityService.enable2FA(request.userId, request.code)
@@ -109,6 +119,7 @@ class SecurityController(private val securityService: SecurityService) {
         }
     }
 
+    @AuditLog(action = "2FA_DISABLE", resourceType = "SECURITY")
     @PostMapping("/2fa/disable")
     fun disable2FA(@RequestBody request: Disable2FARequest): ResponseEntity<ApiResponse<String>> {
         val success = securityService.disable2FA(request.userId)
@@ -119,6 +130,7 @@ class SecurityController(private val securityService: SecurityService) {
         }
     }
 
+    @AuditLog(action = "2FA_VERIFY", resourceType = "SECURITY")
     @PostMapping("/2fa/verify")
     fun verify2FA(@RequestBody request: TwoFactorVerifyRequest): ResponseEntity<ApiResponse<Boolean>> {
         val valid = securityService.verify2FA(request.userId, request.code)

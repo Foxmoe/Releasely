@@ -1,0 +1,24 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+server:
+  # 生产环境端口，可通过环境变量覆盖
+  port: ${SERVER_PORT:8443}
+  ssl:
+    enabled: ${SSL_ENABLED:true}
+    key-store: ${SSL_KEYSTORE_PATH}
+    key-store-password: ${SSL_KEYSTORE_PASSWORD}
+    key-store-type: ${SSL_KEYSTORE_TYPE:PKCS12}
+    key-alias: ${SSL_KEY_ALIAS}
+  # 必须启用，使 Spring Boot 信任反向代理的 X-Forwarded-Proto / X-Forwarded-Host 头
+  # 当部署在 Nginx / Caddy / Traefik 等反向代理后方时，此配置确保应用能正确识别原始请求协议为 HTTPS
+  forward-headers-strategy: native
+
+# 生产环境日志级别调整
+logging:
+  level:
+    org.hibernate.sql: info
+    org.hibernate.type.descriptor.sql.BasicBinder: off
+    org.springframework.security: info

@@ -2,6 +2,7 @@ package top.foxmoe.releasely.controller
 
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import top.foxmoe.releasely.annotation.AuditLog
 import top.foxmoe.releasely.dto.*
 import top.foxmoe.releasely.entity.SyncRecord
 import top.foxmoe.releasely.service.SyncService
@@ -29,12 +30,14 @@ class SyncController(private val syncService: SyncService) {
         return ResponseEntity.ok(ApiResponse.success(records))
     }
 
+    @AuditLog(action = "SYNC_PUSH", resourceType = "SYNC")
     @PostMapping("/push")
     fun pushChanges(@RequestBody request: SyncRequest): ResponseEntity<ApiResponse<SyncResponse>> {
         val response = syncService.sync(request.userId, request)
         return ResponseEntity.ok(ApiResponse.success(response))
     }
 
+    @AuditLog(action = "SYNC_RESOLVE", resourceType = "SYNC")
     @PostMapping("/resolve")
     fun resolveConflict(@RequestBody request: ResolveConflictRequest): ResponseEntity<ApiResponse<String>> {
         val success = syncService.resolveConflict(request.userId, request)
@@ -45,6 +48,7 @@ class SyncController(private val syncService: SyncService) {
         }
     }
 
+    @AuditLog(action = "SYNC_RECORD_CREATE", resourceType = "SYNC")
     @PostMapping("/record")
     fun createSyncRecord(@RequestBody request: CreateSyncRecordRequest): ResponseEntity<ApiResponse<SyncRecordDto>> {
         val record = SyncRecord(

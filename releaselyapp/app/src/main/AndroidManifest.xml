@@ -14,7 +14,10 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_releasely_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Releasely">
+        android:theme="@style/Theme.Releasely"
+        android:usesCleartextTraffic="${usesCleartextTraffic}">
+        <!-- usesCleartextTraffic 在 debug 构建中通过 manifestPlaceholders 注入为 true -->
+        <!-- release 构建中默认 false，仅允许 HTTPS -->
         <activity
             android:name=".MainActivity"
             android:exported="true"

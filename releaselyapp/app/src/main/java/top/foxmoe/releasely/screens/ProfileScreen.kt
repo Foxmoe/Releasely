@@ -39,6 +39,7 @@ fun ProfileScreen() {
     var isLoggedIn by remember { mutableStateOf(authPrefs.getString("token", null) != null) }
 
     var showPartnerScreen by remember { mutableStateOf(false) }
+    var showSharedCalendarScreen by remember { mutableStateOf(false) }
     var showSecurityScreen by remember { mutableStateOf(false) }
     var showDecoyPreview by remember { mutableStateOf(false) }
     var showPersonalProfile by remember { mutableStateOf(false) }
@@ -55,13 +56,49 @@ fun ProfileScreen() {
 
     // 子页面导航栈处理
     when {
+        showSharedCalendarScreen -> {
+            val sharedCalendarData = remember { mutableStateOf<SharedCalendarData?>(null) }
+            val isLoading = remember { mutableStateOf(true) }
+            val hasConnectedPartner = remember { mutableStateOf(false) }
+            val isCalendarSharingEnabled = remember { mutableStateOf(false) }
+
+            LaunchedEffect(Unit) {
+                val app = context.applicationContext as ReleaselyApp
+                // Check if there's a connected partner
+                val partners = app.partnerService.getAllPartners()
+                hasConnectedPartner.value = partners.any { it.status == "connected" }
+                if (hasConnectedPartner.value) {
+                    // TODO: Fetch shared calendar data from API
+                    // For now, just set loading to false
+                    isLoading.value = false
+                }
+                isLoading.value = false
+            }
+
+            SharedCalendarScreen(
+                sharedCalendarData = sharedCalendarData.value,
+                isLoading = isLoading.value,
+                onBack = { showSharedCalendarScreen = false },
+                onToggleSharing = { enabled ->
+                    // TODO: Call API to toggle calendar sharing
+                    isCalendarSharingEnabled.value = enabled
+                },
+                isSharingEnabled = isCalendarSharingEnabled.value
+            )
+            return
+        }
+
         showPartnerScreen -> {
             val partners = remember { mutableStateOf<List<PartnerDisplayItem>>(emptyList()) }
+            val hasConnectedPartner = remember { mutableStateOf(false) }
+            val isCalendarSharingEnabled = remember { mutableStateOf(false) }
+
             LaunchedEffect(Unit) {
                 val app = context.applicationContext as ReleaselyApp
                 partners.value = app.partnerService.getAllPartners().map {
                     PartnerDisplayItem(it.id, it.name, it.inviteCode, it.status)
                 }
+                hasConnectedPartner.value = partners.value.any { it.status == "connected" }
             }
             PartnerScreen(
                 partners = partners.value,
@@ -74,13 +111,32 @@ fun ProfileScreen() {
                 onInvitePartner = { code ->
                     GlobalScope.launch(Dispatchers.IO) {
                         val app = context.applicationContext as ReleaselyApp
-                        val partner = app.partnerService.getPartnerByInviteCode(code)
-                        if (partner != null) {
-                            app.partnerService.updatePartnerStatus(partner.id, "connected")
+                        // 使用后端 API 接受邀请
+                        val activeProfile = app.getActiveProfile()
+                        if (activeProfile != null) {
+                            val userId = activeProfile.id.hashCode().toLong()
+                            app.partnerService.acceptInvite(code, userId)
                         }
                     }
                 },
-                onBack = { showPartnerScreen = false }
+                onCreateInviteCode = {
+                    GlobalScope.launch(Dispatchers.IO) {
+                        val app = context.applicationContext as ReleaselyApp
+                        val activeProfile = app.getActiveProfile()
+                        if (activeProfile != null) {
+                            val userId = activeProfile.id.hashCode().toLong()
+                            app.partnerService.invitePartner(userId)
+                        }
+                    }
+                },
+                onBack = { showPartnerScreen = false },
+                onOpenSharedCalendar = { showSharedCalendarScreen = true },
+                onToggleCalendarSharing = { enabled ->
+                    // TODO: Call API to toggle calendar sharing
+                    isCalendarSharingEnabled.value = enabled
+                },
+                hasConnectedPartner = hasConnectedPartner.value,
+                isCalendarSharingEnabled = isCalendarSharingEnabled.value
             )
             return
         }
