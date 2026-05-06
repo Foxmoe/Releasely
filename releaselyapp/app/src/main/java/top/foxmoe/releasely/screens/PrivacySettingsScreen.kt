@@ -7,7 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.CloudDownload
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Warning
@@ -194,7 +194,7 @@ fun PrivacySettingsScreen(onBack: () -> Unit) {
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))
         ) {
             Icon(
-                imageVector = Icons.Filled.CloudDownload,
+                imageVector = Icons.Filled.Download,
                 contentDescription = null,
                 tint = Color.White
             )

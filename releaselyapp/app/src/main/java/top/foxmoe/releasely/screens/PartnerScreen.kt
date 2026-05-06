@@ -140,7 +140,7 @@ fun PartnerScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp)
             ) {
-                Icon(Icons.Filled.QrCodeScanner, contentDescription = null, modifier = Modifier.size(18.dp))
+                Icon(Icons.Filled.Camera, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(6.dp))
                 Text("输入邀请码加入", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
             }
@@ -157,7 +157,7 @@ fun PartnerScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63))
                     ) {
                         Icon(
-                            Icons.Filled.CalendarMonth,
+                            Icons.Filled.DateRange,
                             contentDescription = null,
                             modifier = Modifier.size(18.dp)
                         )
@@ -237,17 +237,17 @@ fun PartnerScreen(
 
     // 邀请绑定弹窗 - 创建邀请码并分享
     if (showInviteDialog) {
+        val shareContext = LocalContext.current
         InvitePartnerDialog(
             onDismiss = { showInviteDialog = false },
             onCreateInvite = onCreateInviteCode,
             onShare = { link ->
-                val context = LocalContext.current
                 val sendIntent = Intent().apply {
                     action = Intent.ACTION_SEND
                     putExtra(Intent.EXTRA_TEXT, "邀请你成为我的伴侣！点击链接绑定：$link")
                     type = "text/plain"
                 }
-                context.startActivity(Intent.createChooser(sendIntent, "分享邀请链接"))
+                shareContext.startActivity(Intent.createChooser(sendIntent, "分享邀请链接"))
             }
         )
     }
