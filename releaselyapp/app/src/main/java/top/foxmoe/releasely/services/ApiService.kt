@@ -144,7 +144,7 @@ class AuthInterceptor(private val context: Context) : Interceptor {
  * - X-Signature: HMAC-SHA256 签名
  * - X-Timestamp: 当前时间戳（毫秒）
  *
- * 公开端点（/api/auth/**）不添加签名头
+ * 公开端点（/api/auth 路径）不添加签名头
  */
 class SignatureInterceptor(private val signatureKey: String) : Interceptor {
 

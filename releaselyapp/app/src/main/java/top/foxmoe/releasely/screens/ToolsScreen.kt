@@ -26,6 +26,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import top.foxmoe.releasely.ReleaselyApp
+import top.foxmoe.releasely.services.HealthInsightDto
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId

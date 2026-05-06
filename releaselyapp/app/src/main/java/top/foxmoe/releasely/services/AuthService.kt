@@ -179,7 +179,7 @@ class AuthService(private val apiService: ApiService) {
             response.getOrNull()?.let { bytes ->
                 val timestamp = System.currentTimeMillis()
                 val file = java.io.File(
-                    android.os.Environment.getExternalFilesDir(android.content.Context.MODE_PRIVATE),
+                    android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS),
                     "releasely_cloud_backup_$timestamp.json"
                 )
                 file.writeBytes(bytes)
